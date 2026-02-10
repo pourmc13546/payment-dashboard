@@ -2376,14 +2376,39 @@
             URL.revokeObjectURL(url);
         }
 
-        // 페이지 로드 시 저장된 데이터 복원
+        // 같은 폴더의 엑셀 파일을 자동으로 fetch하여 로드
+        async function autoLoadExcelFromServer() {
+            const xlsxFiles = ['미수금_대시보드_260210.xlsx'];
+            for (const fileName of xlsxFiles) {
+                try {
+                    const response = await fetch('./' + encodeURIComponent(fileName));
+                    if (response.ok) {
+                        const arrayBuffer = await response.arrayBuffer();
+                        originalFileBuffer = arrayBuffer.slice(0);
+                        originalFileName = fileName;
+                        processExcelData(arrayBuffer);
+                        console.log('엑셀 파일 자동 로드 완료:', fileName);
+                        return true;
+                    }
+                } catch (e) { console.warn('자동 로드 실패:', fileName, e); }
+            }
+            return false;
+        }
+
+        // 페이지 로드 시: localStorage → 없으면 서버에서 자동 fetch
+        async function initDashboard() {
+            const loaded = loadDataFromStorage();
+            if (!loaded) {
+                await autoLoadExcelFromServer();
+            }
+        }
+
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function() {
-                loadDataFromStorage();
+                initDashboard();
             });
         } else {
-            // DOM이 이미 준비된 상태 (스크립트가 body 하단에 있어 간헐적으로 발생)
-            loadDataFromStorage();
+            initDashboard();
         }
 
         function formatDateForExcel(dateValue) {
