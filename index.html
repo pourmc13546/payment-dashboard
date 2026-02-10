@@ -2378,7 +2378,7 @@
 
         // 같은 폴더의 엑셀 파일을 자동으로 fetch하여 로드
         async function autoLoadExcelFromServer() {
-            const xlsxFiles = ['미수금_대시보드_260210.xlsx'];
+            const xlsxFiles = ['data.xlsx', '미수금_대시보드_260210.xlsx'];
             for (const fileName of xlsxFiles) {
                 try {
                     const response = await fetch('./' + encodeURIComponent(fileName));
