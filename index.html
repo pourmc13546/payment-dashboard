@@ -2395,11 +2395,11 @@
             return false;
         }
 
-        // 페이지 로드 시: localStorage → 없으면 서버에서 자동 fetch
+        // 페이지 로드 시: 서버 우선 → 실패 시 localStorage fallback
         async function initDashboard() {
-            const loaded = loadDataFromStorage();
-            if (!loaded) {
-                await autoLoadExcelFromServer();
+            const serverLoaded = await autoLoadExcelFromServer();
+            if (!serverLoaded) {
+                loadDataFromStorage();
             }
         }
 
