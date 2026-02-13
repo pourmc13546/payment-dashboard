@@ -759,12 +759,12 @@
             .grid-3 { grid-template-columns: 1fr; }
             .grid-4 { grid-template-columns: repeat(2, 1fr); }
         }
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .filter-bar { flex-wrap: wrap; }
+        }
         @media (max-width: 768px) {
             .container { padding: 16px; }
             .header { padding: 0 16px; flex-wrap: wrap; gap: 10px; height: auto; padding-top: 12px; padding-bottom: 12px; }
-            .summary-grid { grid-template-columns: 1fr 1fr; }
-            .grid-2 { grid-template-columns: 1fr; }
-            .stat-value { font-size: 18px; }
             .filter-bar { flex-direction: column; align-items: stretch; }
             .filter-right { flex-direction: column; }
             .search-input { width: 100%; }
@@ -776,6 +776,154 @@
         ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
 
         .hidden { display: none !important; }
+
+        /* 상세 목록 카드: 필터/검색 영역 고정, 테이블만 스크롤 */
+        .detail-card-sticky-wrapper {
+            position: sticky;
+            top: 60px;
+            z-index: 50;
+            background: var(--card-bg);
+            margin: -20px -20px 0;
+            padding: 20px 20px 0;
+            border-radius: 12px 12px 0 0;
+        }
+        .detail-table-area {
+            min-height: 400px;
+        }
+
+        /* ===== 모바일 반응형 개선 ===== */
+        @media (max-width: 600px) {
+            body { font-size: 13px; }
+            .header { padding: 10px 14px; height: auto; }
+            .header h1 { font-size: 0.95rem; gap: 6px; }
+            .header-right { gap: 8px; flex-wrap: wrap; }
+            .header-right > span { font-size: 10px !important; }
+            .container { padding: 10px; }
+
+            /* 요약 지표: 2열 고정, 카드 내부 여백 축소 */
+            .summary-grid { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+            .stat-card { padding: 12px 10px; }
+            .stat-label { font-size: 10px; margin-bottom: 4px; }
+            .stat-value { font-size: 17px; }
+            .stat-sub { font-size: 10px; }
+            .stat-change { font-size: 9px; }
+
+            /* 관리미수금 카드 내부 연도별 분리 축소 */
+            .stat-card div[style*="gap: 10px"] { gap: 6px !important; }
+            .stat-card div[style*="font-size: 13px"] { font-size: 11px !important; }
+            .stat-card div[style*="font-size: 10px"] { font-size: 9px !important; }
+            .stat-card div[style*="font-size: 9px"] { font-size: 8px !important; }
+
+            /* 트랙 카드 */
+            .track-grid { gap: 8px; margin-bottom: 14px; }
+            .track-card { padding: 14px 12px; }
+            .track-name { font-size: 12px; }
+            .track-count { font-size: 10px; padding: 2px 6px; }
+            .track-total { font-size: 15px; margin-bottom: 8px; }
+            .track-stage-info { font-size: 9px; padding: 4px 8px; margin-bottom: 6px; }
+            .stage-item { padding: 6px 4px; }
+            .stage-item-label { font-size: 9px; }
+            .stage-item-value { font-size: 12px; }
+            .stage-item-sub { font-size: 8px; }
+
+            /* 경과일 분포 */
+            .distribution-bar { height: 24px; }
+            .distribution-segment { font-size: 9px; min-width: 28px; }
+
+            /* 액션 섹션: 1열 */
+            .grid-2 { grid-template-columns: 1fr; gap: 10px; }
+            .grid-3 { grid-template-columns: 1fr; gap: 10px; }
+
+            /* 액션 카드 내부 */
+            .card { padding: 14px 12px; margin-bottom: 10px; border-radius: 10px; }
+            .card-header { margin-bottom: 10px; padding-bottom: 8px; }
+            .card-title { font-size: 12px; }
+            .card-title .count-badge { font-size: 10px; padding: 1px 6px; }
+            .action-item { padding: 10px; }
+            .action-title { font-size: 12px; }
+            .action-sub { font-size: 10px; }
+            .action-amount { font-size: 13px; }
+            .action-days { font-size: 10px; }
+            .action-list { max-height: 250px; }
+
+            /* 순위 카드 */
+            .rank-item { padding: 10px; }
+            .rank-name { font-size: 12px; }
+            .rank-sub { font-size: 10px; }
+            .rank-amount { font-size: 13px; }
+            .rank-list { max-height: 300px; }
+            .rank-num { width: 20px; height: 20px; font-size: 10px; margin-right: 8px; }
+
+            /* 미니 탭 */
+            .mini-tab { padding: 4px 8px; font-size: 10px; }
+            .mini-tabs { gap: 3px; }
+            .rank-sort-toggle { gap: 1px; }
+            .rank-sort-btn { padding: 3px 7px; font-size: 10px; }
+
+            /* 상세 목록 */
+            .tab-buttons { gap: 4px; margin-bottom: 10px; }
+            .tab-btn { padding: 8px 12px; font-size: 11px; }
+            .filter-bar { gap: 8px; }
+            .filter-left span { font-size: 12px !important; }
+            .filter-select { padding: 8px 10px; font-size: 12px; min-width: 80px; }
+            .search-input { padding: 8px 10px; font-size: 12px; }
+            .data-table { font-size: 11px; }
+            .data-table th { padding: 8px 6px; font-size: 10px; }
+            .data-table td { padding: 8px 6px; }
+            .badge { font-size: 9px; padding: 2px 5px; }
+
+            /* 페이지네이션 */
+            .pagination { padding: 10px; gap: 3px; }
+            .page-btn { min-width: 28px; height: 28px; font-size: 11px; }
+            .page-info { font-size: 10px; margin-left: 6px; }
+
+            /* 모달 */
+            .modal { padding: 10px; }
+            .modal-content { max-height: 85vh; border-radius: 10px; }
+            .modal-header { padding: 14px 16px; }
+            .modal-header h3 { font-size: 14px; }
+            .modal-body { padding: 14px; }
+
+            /* 업로드 플로팅 버튼 */
+            .upload-floating { bottom: 16px; right: 16px; }
+            .upload-floating-btn { padding: 8px 14px; font-size: 11px; }
+
+            /* 토글 */
+            .toggle-group { font-size: 10px; gap: 4px; }
+            .toggle-group-sm { font-size: 9px; gap: 3px; }
+            .toggle-switch { width: 34px; height: 18px; }
+            .toggle-slider::before { height: 14px; width: 14px; left: 2px; bottom: 2px; }
+            .toggle-switch input:checked + .toggle-slider::before { transform: translateX(14px); }
+
+            /* 툴팁: 모바일에서 위치 조정 */
+            .tooltip-icon .tooltip-text {
+                position: fixed;
+                top: auto;
+                bottom: 20%;
+                left: 10%;
+                right: 10%;
+                max-width: none;
+                z-index: 300;
+            }
+            .tooltip-icon .tooltip-text::after { display: none; }
+
+            /* 상세테이블 sticky 조정 (모바일 헤더 높이 다름) */
+            .detail-card-sticky-wrapper {
+                top: 0;
+                position: relative;
+            }
+        }
+
+        /* 태블릿 보정 */
+        @media (min-width: 601px) and (max-width: 768px) {
+            .summary-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+            .stat-value { font-size: 18px; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .grid-3 { grid-template-columns: 1fr 1fr; }
+            .tooltip-icon .tooltip-text {
+                max-width: 280px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -875,7 +1023,7 @@
                         <span class="stat-label-left">
                             예외 처리
                             <span class="tooltip-icon">?
-                                <span class="tooltip-text">분쟁·계약변경 등 특수 사유로 별도 분류된 건</span>
+                                <span class="tooltip-text">특수사유로 별도 구분된 건</span>
                             </span>
                         </span>
                     </div>
@@ -1162,47 +1310,49 @@
             </div>
 
             <!-- 6. 상세 목록 -->
-            <div class="card">
-                <div class="tab-buttons">
-                    <button class="tab-btn active" data-track="" onclick="setDetailTab('')">전체</button>
-                    <button class="tab-btn" data-track="A" onclick="setDetailTab('A')">컨설팅</button>
-                    <button class="tab-btn" data-track="B" onclick="setDetailTab('B')">자재판매</button>
-                    <button class="tab-btn" data-track="C" onclick="setDetailTab('C')">특허기술자문료</button>
-                    <button class="btn btn-primary btn-sm" onclick="downloadExcel()" style="margin-left: auto;">다운로드</button>
+            <div class="card" id="detailCard">
+                <div class="detail-card-sticky-wrapper">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" data-track="" onclick="setDetailTab('')">전체</button>
+                        <button class="tab-btn" data-track="A" onclick="setDetailTab('A')">컨설팅</button>
+                        <button class="tab-btn" data-track="B" onclick="setDetailTab('B')">자재판매</button>
+                        <button class="tab-btn" data-track="C" onclick="setDetailTab('C')">특허기술자문료</button>
+                        <button class="btn btn-primary btn-sm" onclick="downloadExcel()" style="margin-left: auto;">다운로드</button>
+                    </div>
+
+                    <div class="filter-bar">
+                        <div class="filter-left">
+                            <span style="font-size: 14px; font-weight: 600;" id="detailTitle">전체 상세 내역</span>
+                        </div>
+                        <div class="filter-right">
+                            <select class="filter-select" id="filterStage" onchange="goToPage(1)">
+                                <option value="">구간</option>
+                                <option value="장기미수">장기미수</option>
+                                <option value="관리">관리</option>
+                                <option value="기한내">기한내</option>
+                            </select>
+                            <select class="filter-select" id="filterException" onchange="goToPage(1)">
+                                <option value="">예외여부</option>
+                                <option value="N">예외 제외</option>
+                                <option value="Y">예외만</option>
+                            </select>
+                            <select class="filter-select" id="filterComm" onchange="goToPage(1)">
+                                <option value="">예정일</option>
+                                <option value="Y">입금일 확보</option>
+                                <option value="N">입금일 미확보</option>
+                            </select>
+                            <select class="filter-select" id="filterPaid" onchange="goToPage(1)">
+                                <option value="unpaid">미수금만</option>
+                                <option value="paid">입금완료만</option>
+                                <option value="">전체(입금포함)</option>
+                            </select>
+                            <input type="text" class="search-input" id="searchInput" placeholder="업체/현장 검색..." oninput="handleSearchInput()">
+                            <button class="btn btn-outline btn-sm" onclick="resetFilters()">초기화</button>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="filter-bar">
-                    <div class="filter-left">
-                        <span style="font-size: 14px; font-weight: 600;" id="detailTitle">전체 상세 내역</span>
-                    </div>
-                    <div class="filter-right">
-                        <select class="filter-select" id="filterStage" onchange="goToPage(1)">
-                            <option value="">구간</option>
-                            <option value="장기미수">장기미수</option>
-                            <option value="관리">관리</option>
-                            <option value="기한내">기한내</option>
-                        </select>
-                        <select class="filter-select" id="filterException" onchange="goToPage(1)">
-                            <option value="">예외여부</option>
-                            <option value="N">예외 제외</option>
-                            <option value="Y">예외만</option>
-                        </select>
-                        <select class="filter-select" id="filterComm" onchange="goToPage(1)">
-                            <option value="">예정일</option>
-                            <option value="Y">입금일 확보</option>
-                            <option value="N">입금일 미확보</option>
-                        </select>
-                        <select class="filter-select" id="filterPaid" onchange="goToPage(1)">
-                            <option value="unpaid">미수금만</option>
-                            <option value="paid">입금완료만</option>
-                            <option value="">전체(입금포함)</option>
-                        </select>
-                        <input type="text" class="search-input" id="searchInput" placeholder="업체/현장 검색..." oninput="goToPage(1)">
-                        <button class="btn btn-outline btn-sm" onclick="resetFilters()">초기화</button>
-                    </div>
-                </div>
-
-                <div style="overflow-x: auto;">
+                <div class="detail-table-area"> style="overflow-x: auto;">
                     <table class="data-table" id="detailTable">
                         <thead>
                             <tr>
@@ -1223,6 +1373,7 @@
                 </div>
 
                 <div class="pagination" id="pagination"></div>
+                </div><!-- end detail-table-area -->
             </div>
 
         </div>
@@ -1288,6 +1439,19 @@
         function openUploadModal() { document.getElementById('uploadModal').classList.add('active'); }
         function closeUploadModal() { document.getElementById('uploadModal').classList.remove('active'); }
         function closeCompanyModal() { document.getElementById('companyModal').classList.remove('active'); }
+
+        // 검색 입력 시 화면 흔들림 방지: 스크롤 위치 고정 + 디바운스
+        let searchTimer = null;
+        function handleSearchInput() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                const scrollY = window.scrollY;
+                goToPage(1);
+                requestAnimationFrame(() => {
+                    window.scrollTo(0, scrollY);
+                });
+            }, 200);
+        }
 
         function loadExcel(event) {
             const file = event.target.files[0];
@@ -2042,7 +2206,7 @@
 
             let html = `<div style="margin-bottom: 16px; padding: 12px; background: var(--bg); border-radius: 8px;">
                 <strong>총 예외 처리 금액:</strong> ${formatFullAmount(totalAmount)}
-                <span style="margin-left: 12px; color: var(--text-muted); font-size: 12px;">분쟁·계약변경 등 특수 사유 건</span>
+                <span style="margin-left: 12px; color: var(--text-muted); font-size: 12px;">특수사유로 별도 구분된 건</span>
             </div>`;
 
             if (exceptionData.length === 0) {
