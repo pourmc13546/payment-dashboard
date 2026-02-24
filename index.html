@@ -1460,11 +1460,13 @@
             // 원본 파일명 저장
             originalFileName = file.name;
 
+            const fileTime = file.lastModified ? new Date(file.lastModified) : new Date();
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 // 원본 파일 바이너리 그대로 보관
                 originalFileBuffer = e.target.result.slice(0);
-                processExcelData(e.target.result);
+                processExcelData(e.target.result, fileTime);
                 closeUploadModal();
             };
             reader.readAsArrayBuffer(file);
@@ -1515,7 +1517,7 @@
             return Math.round((d1 - d2) / (1000 * 60 * 60 * 24));
         }
 
-        function processExcelData(arrayBuffer) {
+        function processExcelData(arrayBuffer, updateTime) {
             try {
                 const prevUnpaid = rawData.filter(r => !r['입금일']);
                 previousData = prevUnpaid.length > 0 ? {
@@ -1574,7 +1576,7 @@
 
                 document.getElementById('emptyState').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
-                const now = new Date();
+                const now = updateTime || new Date();
                 const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0'), d = String(now.getDate()).padStart(2,'0');
                 const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0');
                 document.getElementById('updateDate').textContent = y + '-' + m + '-' + d + ' ' + hh + ':' + mm + ' 업데이트';
@@ -2550,7 +2552,9 @@
                         const arrayBuffer = await response.arrayBuffer();
                         originalFileBuffer = arrayBuffer.slice(0);
                         originalFileName = fileName;
-                        processExcelData(arrayBuffer);
+                        const lastModified = response.headers.get('Last-Modified');
+                        const fileTime = lastModified ? new Date(lastModified) : null;
+                        processExcelData(arrayBuffer, fileTime);
                         console.log('엑셀 파일 자동 로드 완료:', fileName);
                         return true;
                     }
