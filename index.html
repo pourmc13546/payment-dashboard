@@ -3097,8 +3097,29 @@
                 } catch(e) { /* 일부 환경에서 defineProperty 불가 – 무시 */ }
             }
 
+            // ── 매출현황 대시보드에서 넘어온 인증 토큰 검증 ──────────
+            const _REF_KEY = ['c0689c3f','06b5e4a4'].join(''); // 매출현황 관리자 해시 앞 16자
+            const REF_TOKEN_MAX_AGE = 30 * 1000; // 토큰 유효시간 30초
+
+            async function verifyRefToken() {
+                try {
+                    const params = new URLSearchParams(window.location.search);
+                    if (params.get('ref') !== 'sales') return false;
+                    const ts = parseInt(params.get('ts'), 10);
+                    const tk = params.get('tk');
+                    if (!ts || !tk) return false;
+                    // 토큰 유효시간 확인 (30초 이내)
+                    if (Math.abs(Date.now() - ts) > REF_TOKEN_MAX_AGE) return false;
+                    // 토큰 재계산 후 비교
+                    const expected = await sha256(ts.toString() + '_' + _REF_KEY);
+                    return tk === expected;
+                } catch(e) {
+                    return false;
+                }
+            }
+
             // ── 초기화 ────────────────────────────────────────────────
-            function init() {
+            async function init() {
                 // 이미 유효한 세션이 있으면 바로 언락
                 if (getSession()) {
                     const overlay = document.getElementById('login-overlay');
@@ -3106,6 +3127,15 @@
                     if (overlay) overlay.style.display = 'none';
                     if (content) content.style.display = '';
                     startDevToolsGuard();
+                    return;
+                }
+
+                // 매출현황 대시보드에서 인증된 관리자가 넘어온 경우 바로 언락
+                if (await verifyRefToken()) {
+                    // URL에서 토큰 파라미터 제거 (주소창 노출 방지)
+                    const cleanUrl = window.location.origin + window.location.pathname;
+                    window.history.replaceState({}, '', cleanUrl);
+                    unlockApp();
                     return;
                 }
 
