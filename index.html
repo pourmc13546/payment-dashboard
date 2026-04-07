@@ -1881,6 +1881,14 @@
             return num.toLocaleString();
         }
 
+        function formatAmount2(num) {
+            if (!num) return '-';
+            if (num >= 100000000) return (num / 100000000).toFixed(2) + '억';
+            if (num >= 10000000) return (num / 10000000).toFixed(2) + '천만';
+            if (num >= 10000) return (num / 10000).toFixed(2) + '만';
+            return num.toLocaleString();
+        }
+
 
         function formatFullAmount(num) { return num ? Math.round(num).toLocaleString() + '원' : '-'; }
 
@@ -1932,9 +1940,9 @@
             const manageBefore26Amount = manageBefore26.reduce((s, r) => s + (r['미수금액'] || 0), 0);
             const manage26Amount = manage26.reduce((s, r) => s + (r['미수금액'] || 0), 0);
 
-            document.getElementById('manageBefore26').textContent = formatAmount(manageBefore26Amount);
+            document.getElementById('manageBefore26').textContent = formatAmount2(manageBefore26Amount);
             document.getElementById('manageBefore26Count').textContent = manageBefore26.length + '건';
-            document.getElementById('manage26').textContent = formatAmount(manage26Amount);
+            document.getElementById('manage26').textContent = formatAmount2(manage26Amount);
             document.getElementById('manage26Count').textContent = manage26.length + '건';
             document.getElementById('overdueAmount').textContent = formatAmount(overdueAmount);
             document.getElementById('overdueDetail').textContent = `${overdueData.length}건`;
