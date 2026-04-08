@@ -2829,14 +2829,87 @@
                     .replace(/\//g, '&#x2F;');
             }
 
-            // ── SHA-256 해싱 (Web Crypto API) ────────────────────────
+            // ── SHA-256 해싱 (Pure JS – HTTP/HTTPS/file:// 모두 동작) ──
             async function sha256(message) {
-                const enc = new TextEncoder();
-                const data = enc.encode(message);
-                const hashBuf = await crypto.subtle.digest('SHA-256', data);
-                return Array.from(new Uint8Array(hashBuf))
-                    .map(b => b.toString(16).padStart(2, '0'))
-                    .join('');
+                // crypto.subtle 사용 가능 환경(HTTPS/localhost)이면 우선 사용
+                if (window.crypto && window.crypto.subtle) {
+                    try {
+                        const enc = new TextEncoder();
+                        const data = enc.encode(message);
+                        const hashBuf = await crypto.subtle.digest('SHA-256', data);
+                        return Array.from(new Uint8Array(hashBuf))
+                            .map(b => b.toString(16).padStart(2, '0'))
+                            .join('');
+                    } catch(e) { /* fallthrough to pure-JS */ }
+                }
+                // Pure-JS SHA-256 fallback (HTTP 환경 대응)
+                function _sha256js(str) {
+                    function rightRotate(value, amount) {
+                        return (value >>> amount) | (value << (32 - amount));
+                    }
+                    var mathPow = Math.pow;
+                    var maxWord = mathPow(2, 32);
+                    var lengthProperty = 'length';
+                    var i, j;
+                    var result = '';
+                    var words = [];
+                    var asciiBitLength = str[lengthProperty] * 8;
+                    var hash = [];
+                    var k = [];
+                    var primeCounter = 0;
+                    var isComposite = {};
+                    for (var candidate = 2; primeCounter < 64; candidate++) {
+                        if (!isComposite[candidate]) {
+                            for (i = 0; i < 313; i += candidate) { isComposite[i] = candidate; }
+                            hash[primeCounter] = (mathPow(candidate, .5) * maxWord) | 0;
+                            k[primeCounter++] = (mathPow(candidate, 1/3) * maxWord) | 0;
+                        }
+                    }
+                    str += '\x80';
+                    while (str[lengthProperty] % 64 - 56) str += '\x00';
+                    for (i = 0; i < str[lengthProperty]; i++) {
+                        j = str.charCodeAt(i);
+                        if (j >> 8) return '';
+                        words[i >> 2] |= j << ((3 - i) % 4) * 8;
+                    }
+                    words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);
+                    words[words[lengthProperty]] = (asciiBitLength);
+                    for (j = 0; j < words[lengthProperty];) {
+                        var w = words.slice(j, j += 16);
+                        var oldHash = hash.slice(0);
+                        for (i = 0; i < 64; i++) {
+                            var i2 = i + j - 16;
+                            var w15 = w[i - 15], w2 = w[i - 2];
+                            var a = hash[0], e = hash[4];
+                            var temp1 = hash[7]
+                                + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+                                + ((e & hash[5]) ^ (~e & hash[6]))
+                                + k[i]
+                                + (w[i] = (i < 16) ? w[i] : (
+                                    w[i - 16]
+                                    + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+                                    + w[i - 7]
+                                    + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
+                                ) | 0);
+                            var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+                                + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+                            hash = [(temp1 + temp2) | 0].concat(hash);
+                            hash[4] = (hash[4] + temp1) | 0;
+                            hash.length = 8;
+                        }
+                        for (i = 0; i < 8; i++) { hash[i] = (hash[i] + oldHash[i]) | 0; }
+                    }
+                    for (i = 0; i < 8; i++) {
+                        for (j = 3; j + 1; j--) {
+                            var b = (hash[i] >> (j * 8)) & 255;
+                            result += ((b < 16) ? '0' : '') + b.toString(16);
+                        }
+                    }
+                    return result;
+                }
+                // UTF-8 인코딩 처리
+                var utf8 = unescape(encodeURIComponent(message));
+                return _sha256js(utf8);
             }
 
             // ── 세션 토큰 검증 ────────────────────────────────────────
@@ -3027,83 +3100,9 @@
                 }
             };
 
-            // ── 4. 개발자도구(F12) 감지 및 차단 ─────────────────────
-            // 방법 A: 윈도우 크기 차이 감지 (사이드 패널 방식)
-            // 방법 B: debugger 타이밍 감지 (분리 패널 방식)
-            let _devGuardActive = false;
-            let _devOpen = false;
-            let _devCheckInterval = null;
-
-            function blockPage() {
-                clearSession();
-                const blocked = document.getElementById('security-blocked');
-                if (blocked) blocked.classList.add('show');
-                const overlay  = document.getElementById('login-overlay');
-                const content  = document.getElementById('app-content');
-                if (overlay) overlay.style.display = 'none';
-                if (content) content.style.display = 'none';
-                // 3초 후 강제 이동
-                setTimeout(() => { location.href = 'about:blank'; }, 3000);
-            }
-
-            function detectDevTools() {
-                // 방법 A: 크기 차이 (임계값 170px – 브라우저 패딩 고려)
-                const wDiff = window.outerWidth  - window.innerWidth;
-                const hDiff = window.outerHeight - window.innerHeight;
-                if (wDiff > 170 || hDiff > 170) return true;
-
-                // 방법 B: 타이밍 기반 debugger 감지
-                const t0 = performance.now();
-                // eslint-disable-next-line no-debugger
-                debugger;
-                const elapsed = performance.now() - t0;
-                if (elapsed > 80) return true;
-
-                return false;
-            }
-
-            function startDevToolsGuard() {
-                if (_devGuardActive) return;
-                _devGuardActive = true;
-
-                // 즉시 1회 체크
-                if (detectDevTools()) { blockPage(); return; }
-
-                _devCheckInterval = setInterval(() => {
-                    if (detectDevTools()) {
-                        clearInterval(_devCheckInterval);
-                        if (!_devOpen) {
-                            _devOpen = true;
-                            blockPage();
-                        }
-                    } else {
-                        _devOpen = false;
-                    }
-                }, 800);
-
-                // 창 크기 변경 이벤트도 감지
-                window.addEventListener('resize', () => {
-                    if (detectDevTools()) {
-                        clearInterval(_devCheckInterval);
-                        _devOpen = true;
-                        blockPage();
-                    }
-                });
-
-                // console 출력 감지 (콘솔에서 직접 접근 시)
-                const _consoleDescriptor = Object.getOwnPropertyDescriptor(console, 'log');
-                let _consoleCount = 0;
-                try {
-                    Object.defineProperty(console, '_nfTrack', {
-                        get: function() {
-                            _consoleCount++;
-                            if (_consoleCount > 2) blockPage();
-                            return undefined;
-                        },
-                        configurable: true
-                    });
-                } catch(e) { /* 일부 환경에서 defineProperty 불가 – 무시 */ }
-            }
+            // ── 4. 개발자도구 감지 (비활성화 – 오탐 이슈로 제거) ──────
+            function blockPage() { /* 비활성화 */ }
+            function startDevToolsGuard() { /* 비활성화 */ }
 
             // ── 매출현황 대시보드에서 넘어온 인증 토큰 검증 ──────────
             const _REF_KEY = ['c0689c3f','06b5e4a4'].join(''); // 매출현황 관리자 해시 앞 16자
