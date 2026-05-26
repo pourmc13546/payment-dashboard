@@ -156,7 +156,7 @@
 
         .summary-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 12px;
             margin-bottom: 20px;
         }
@@ -165,6 +165,42 @@
             border-radius: 8px;
             padding: 16px 18px;
             border: 1px solid var(--border);
+            transition: box-shadow 0.15s;
+        }
+        .stat-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .stat-card.recovery-card { background: linear-gradient(135deg, #fefce8 0%, #fff 100%); border-color: #fde68a; }
+
+        /* === 연도 토글 강조 바 === */
+        .year-toggle-bar {
+            display: flex; align-items: center; gap: 14px;
+            background: white; border-radius: 10px;
+            padding: 12px 18px; margin-bottom: 14px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .year-toggle-label { font-size: 13px; font-weight: 600; color: #475569; }
+        .year-toggle-group {
+            display: flex; gap: 4px;
+            background: #f1f5f9; border-radius: 8px; padding: 4px;
+        }
+        .year-toggle-btn {
+            border: none; cursor: pointer;
+            padding: 8px 22px; border-radius: 6px;
+            font-size: 14px; font-weight: 700;
+            background: transparent; color: #64748b;
+            transition: all 0.15s;
+        }
+        .year-toggle-btn:hover { color: #1e293b; background: rgba(255,255,255,0.6); }
+        .year-toggle-btn.active {
+            background: #1e293b; color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+
+        @media (max-width: 900px) {
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 520px) {
+            .summary-grid { grid-template-columns: 1fr; }
         }
 
         .stat-label {
@@ -247,6 +283,46 @@
             color: var(--text);
         }
         .stat-sub { font-size: 11px; color: var(--text-muted); }
+
+        /* === 공지·참고사항 보드 === */
+        .notice-board { background: white; border-radius: 10px; padding: 14px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); border: 1px solid #e5e7eb; margin-bottom: 20px; }
+        .notice-header-row { display: flex; align-items: center; margin-bottom: 10px; }
+        .notice-header-row h3 { margin: 0; font-size: 14px; font-weight: 600; color: #1e293b; }
+        .notice-count { font-size: 12px; color: #6b7280; font-weight: 500; margin-left: 4px; }
+        .notice-list { display: flex; flex-direction: column; gap: 6px; }
+        .notice-card { display: flex; padding: 10px 12px; border-radius: 6px; gap: 10px; align-items: flex-start; border-left: 3px solid #94a3b8; background: #f8fafc; transition: background 0.15s; }
+        .notice-card:hover { background: #f1f5f9; }
+        .notice-card.type-공지 { border-left-color: #dc2626; background: #fef2f2; }
+        .notice-card.type-공지:hover { background: #fee2e2; }
+        .notice-card.type-긴급 { border-left-color: #ea580c; background: #fff7ed; box-shadow: 0 0 0 1px #fed7aa; }
+        .notice-card.type-긴급:hover { background: #ffedd5; }
+        .notice-card.type-참고 { border-left-color: #ca8a04; background: #fefce8; }
+        .notice-card.type-참고:hover { background: #fef9c3; }
+        .notice-type-badge { font-size: 10px; padding: 2px 6px; border-radius: 3px; font-weight: 700; flex-shrink: 0; line-height: 1.4; }
+        .notice-type-badge.공지 { background: #dc2626; color: white; }
+        .notice-type-badge.긴급 { background: #ea580c; color: white; }
+        .notice-type-badge.참고 { background: #ca8a04; color: white; }
+        .notice-body { flex: 1; min-width: 0; }
+        .notice-title { font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 3px; line-height: 1.4; }
+        .notice-content { font-size: 12px; color: #475569; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+        .notice-meta { display: flex; align-items: center; gap: 8px; margin-top: 5px; font-size: 11px; color: #64748b; }
+        .notice-status { padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; }
+        .notice-status.emergency { background: #fecaca; color: #991b1b; }
+        .notice-status.progress { background: #dbeafe; color: #1e40af; }
+        .notice-status.negotiate { background: #fef3c7; color: #92400e; }
+        .notice-status.review { background: #e5e7eb; color: #374151; }
+        .notice-status.sent { background: #d1fae5; color: #065f46; }
+        .notice-status.done { background: #d1fae5; color: #065f46; text-decoration: line-through; }
+        .notice-status.hold { background: #d1d5db; color: #4b5563; }
+        .notice-status.default { background: #e5e7eb; color: #4b5563; }
+        .notice-pin { font-size: 12px; flex-shrink: 0; margin-right: 2px; }
+
+        /* === 순위 카드 접기/펼치기 === */
+        .ranking-toggle-bar { background: white; border-radius: 10px; padding: 10px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); border: 1px solid #e5e7eb; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; transition: background 0.15s; }
+        .ranking-toggle-bar:hover { background: #f8fafc; }
+        .ranking-toggle-bar .toggle-title { font-size: 13px; font-weight: 600; color: #1e293b; }
+        .ranking-toggle-bar .toggle-icon { font-size: 11px; color: #64748b; margin-right: 6px; }
+        .ranking-toggle-bar .toggle-label { font-size: 12px; color: #64748b; }
 
         .track-grid {
             display: grid;
@@ -1141,7 +1217,16 @@
 
         <div id="dashboard" class="hidden">
 
-            <!-- 1. 요약 지표 (핵심 5개) - 순서: 수금예정액 > 관리미수금 > 장기미수 > 예외처리 > 회신대기 현장 -->
+            <!-- 연도 토글 (강조) -->
+            <div class="year-toggle-bar">
+                <span class="year-toggle-label">📅 조회 연도</span>
+                <div class="year-toggle-group">
+                    <button id="yearBtn26" onclick="switchYear('26년')" class="year-toggle-btn active">26년</button>
+                    <button id="yearBtn25" onclick="switchYear('~25년')" class="year-toggle-btn">~25년</button>
+                </div>
+            </div>
+
+            <!-- 1. 요약 지표 (4개 카드) - 수금예정액 / 관리미수금 / 장기미수금 / 2026년 대금회수율 -->
             <div class="summary-grid">
                 <div class="stat-card">
                     <div class="stat-label">
@@ -1209,30 +1294,35 @@
                     <div class="stat-value" id="overdueAmount">-</div>
                     <div class="stat-sub" id="overdueDetail">-</div>
                 </div>
-                <div class="stat-card clickable" onclick="showExceptionList()">
+                <!-- 카드 4: 2026년 대금회수율 -->
+                <div class="stat-card recovery-card">
                     <div class="stat-label">
                         <span class="stat-label-left">
-                            예외 처리
+                            2026년 대금회수율
                             <span class="tooltip-icon">?
-                                <span class="tooltip-text">특수사유로 별도 구분된 건</span>
+                                <span class="tooltip-text" style="text-align:left;">
+                                    <div style="font-weight:600; margin-bottom:6px;">대금회수율 산정</div>
+                                    <div style="font-size:12px; line-height:1.5;">(확정매출 − 수금예정액) / 확정매출<br>= 받은 매출 / 확정매출 전체</div>
+                                    <div style="color:#94a3b8; font-size:11px; margin-top:6px;">연말까지 누적되어 내년 초 측정 지표와 동일</div>
+                                </span>
                             </span>
                         </span>
+                        <span class="stat-change hidden" id="recoveryChange"></span>
                     </div>
-                    <div class="stat-value" id="exceptionCount">-</div>
-                    <div class="stat-sub" id="exceptionAmount">-</div>
-                </div>
-                <div class="stat-card clickable" onclick="showNoCommList()">
-                    <div class="stat-label">
-                        <span class="stat-label-left">
-                            회신대기 현장
-                            <span class="tooltip-icon">?
-                                <span class="tooltip-text">입금 예정일 미확보 현장</span>
-                            </span>
-                        </span>
+                    <div class="stat-value" id="recoveryRate">-</div>
+                    <div class="stat-sub" style="display:flex; flex-direction:column; gap:2px;">
+                        <span id="recoveryDetail">-</span>
+                        <span style="color:#94a3b8; font-size:10px; margin-top:2px; padding-top:4px; border-top:1px dashed #e5e7eb;">이번달 회수액 <span id="thisMonthIncome" style="color:#475569; font-weight:600;">-</span></span>
                     </div>
-                    <div class="stat-value" id="noCommCount">-</div>
-                    <div class="stat-sub" id="noCommAmount">-</div>
                 </div>
+            </div>
+
+            <!-- 1.5 공지·참고사항 보드 (Notice 시트 기반) -->
+            <div id="noticeBoard" class="notice-board" style="display:none;">
+                <div class="notice-header-row">
+                    <h3>📌 공지·참고사항 <span id="noticeCount" class="notice-count"></span></h3>
+                </div>
+                <div id="noticeList" class="notice-list"></div>
             </div>
 
             <!-- 2. 트랙별 현황 -->
@@ -1422,8 +1512,15 @@
                 </div>
             </div>
 
-            <!-- 5. 상위 현장/업체 순위 (3분할) -->
-            <div style="margin-bottom: 16px;">
+            <!-- 5. 상위 현장/업체 순위 (3분할) - 접기/펼치기 -->
+            <div class="ranking-toggle-bar" onclick="toggleRanking()">
+                <div>
+                    <span class="toggle-icon" id="rankingToggleIcon">▶</span>
+                    <span class="toggle-title">📊 순위 카드 (미수금 상위 현장·업체, 경과일 상위)</span>
+                </div>
+                <span class="toggle-label" id="rankingToggleLabel">펼치기</span>
+            </div>
+            <div id="rankingSection" style="margin-bottom: 16px; display:none;">
                 <div class="grid-3">
                     <div class="card" style="margin-bottom:0;">
                         <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
@@ -1522,11 +1619,6 @@
                                 <option value="관리">관리</option>
                                 <option value="기한내">기한내</option>
                             </select>
-                            <select class="filter-select" id="filterException" onchange="goToPage(1)">
-                                <option value="">예외여부</option>
-                                <option value="N">예외 제외</option>
-                                <option value="Y">예외만</option>
-                            </select>
                             <select class="filter-select" id="filterComm" onchange="goToPage(1)">
                                 <option value="">예정일</option>
                                 <option value="Y">입금일 확보</option>
@@ -1556,7 +1648,6 @@
                                 <th class="center" onclick="setSortColumn('단계')">단계 <span class="sort-icon">↕</span></th>
                                 <th onclick="setSortColumn('예상입금일')">예상입금일 <span class="sort-icon">↕</span></th>
                                 <th onclick="setSortColumn('입금일')">입금일 <span class="sort-icon">↕</span></th>
-                                <th class="center">예외</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -1572,17 +1663,40 @@
 
     <!-- 업로드 모달 -->
     <div class="modal" id="uploadModal">
-        <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-content" style="max-width: 560px;">
             <div class="modal-header">
                 <h3>엑셀 파일 업로드</h3>
                 <button class="close-btn" onclick="closeUploadModal()">×</button>
             </div>
             <div class="modal-body">
-                <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
-                    <div class="upload-icon">📁</div>
-                    <div class="upload-text">클릭하여 파일을 선택하거나<br>여기로 파일을 끌어다 놓으세요</div>
-                    <div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">.xlsx, .xls 파일만 지원</div>
-                    <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="loadExcel(event)">
+                <!-- 매출현황 업로드 -->
+                <div style="margin-bottom: 14px;">
+                    <div style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:#1e293b; margin-bottom:8px;">
+                        📊 매출현황
+                        <span style="font-size:11px; font-weight:400; color:#64748b;">(컨설팅·자재판매·특허·기술자문·2025시트 포함)</span>
+                    </div>
+                    <div class="upload-zone" onclick="document.getElementById('fileInput').click()" style="padding: 20px;">
+                        <div class="upload-icon" style="font-size:28px;">📁</div>
+                        <div class="upload-text" style="font-size:13px;">클릭하여 매출현황 엑셀 선택</div>
+                        <div style="margin-top: 4px; font-size: 11px; color: var(--text-muted);">.xlsx, .xls</div>
+                        <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="loadExcel(event)">
+                    </div>
+                </div>
+                <!-- 공지(Notice) 업로드 -->
+                <div>
+                    <div style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:#1e293b; margin-bottom:8px;">
+                        📌 공지·참고사항 (Notice)
+                        <span style="font-size:11px; font-weight:400; color:#64748b;">(별도 파일로 독립 관리)</span>
+                    </div>
+                    <div class="upload-zone" onclick="document.getElementById('noticeFileInput').click()" style="padding: 20px; background:#fefce8; border-color:#fde68a;">
+                        <div class="upload-icon" style="font-size:28px;">📌</div>
+                        <div class="upload-text" style="font-size:13px;">클릭하여 Notice 엑셀 선택</div>
+                        <div style="margin-top: 4px; font-size: 11px; color: var(--text-muted);">Notice 시트가 있는 .xlsx</div>
+                        <input type="file" id="noticeFileInput" accept=".xlsx,.xls" onchange="loadNoticeExcel(event)">
+                    </div>
+                </div>
+                <div style="margin-top: 12px; padding: 10px 12px; background: #f8fafc; border-radius: 6px; font-size: 11px; color: #64748b; line-height: 1.5;">
+                    💡 두 파일은 <b>완전 독립</b>적으로 관리됩니다. 매출현황만 업데이트하거나 공지만 업데이트할 때 한쪽만 업로드하면 됩니다. 다른 쪽 데이터는 그대로 유지됩니다.
                 </div>
             </div>
         </div>
@@ -1603,11 +1717,13 @@
 
     <script>
         let rawData = [];
+        let notices = [];           // Notice 시트 파싱 결과 (공지·참고사항)
         let previousData = null;
         let originalFileBuffer = null;  // 업로드한 원본 엑셀 파일 보관
         let originalFileName = '';      // 원본 파일명 보관
         let originalHeaderRowIdx = 0;   // 원본 엑셀의 헤더 행 인덱스 (0-based)
         let currentTrack = '';
+        let currentYear = '26년';  // '26년'(메인) | '~25년'(서브)
         let currentPage = 1;
         let sortColumn = '경과일';
         let sortDirection = 'desc';
@@ -1644,6 +1760,87 @@
                     window.scrollTo(0, scrollY);
                 });
             }, 200);
+        }
+
+        // Notice 전용 업로드 처리 (매출현황과 완전 독립)
+        function loadNoticeExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    let sheetName = workbook.SheetNames.find(n => n === 'Notice');
+                    if (!sheetName) {
+                        // Notice 시트가 없으면 첫 번째 시트를 사용 (헤더가 맞으면 처리)
+                        sheetName = workbook.SheetNames[0];
+                    }
+                    const sheet = workbook.Sheets[sheetName];
+                    const njson = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                    if (!njson || njson.length < 2) {
+                        alert('Notice 데이터가 비어있습니다. 헤더 행 + 최소 1행이 필요합니다.');
+                        return;
+                    }
+                    const nheaders = njson[0] || [];
+                    const nIdx = (name) => nheaders.findIndex(h => h === name);
+                    const ci작성 = nIdx('작성일');
+                    const ci연도 = nIdx('표시연도');
+                    const ci유형 = nIdx('유형');
+                    const ci제목 = nIdx('제목');
+                    const ci내용 = nIdx('내용');
+                    const ci상태 = nIdx('진행상태');
+                    const ci고정 = nIdx('고정');
+                    if (ci제목 < 0) {
+                        alert('필수 컬럼 "제목"을 찾을 수 없습니다. Notice 시트 헤더를 확인해주세요.');
+                        return;
+                    }
+                    const parsed = [];
+                    for (let i = 1; i < njson.length; i++) {
+                        const row = njson[i];
+                        if (!row || !row.length) continue;
+                        const 제목 = row[ci제목];
+                        if (!제목) continue;
+                        const 유형Raw = ci유형 >= 0 ? String(row[ci유형] || '').trim() : '';
+                        const 유형 = ['공지','참고','긴급'].includes(유형Raw) ? 유형Raw : '참고';
+                        const 연도Raw = ci연도 >= 0 ? String(row[ci연도] || '').trim() : '';
+                        const 표시연도 = ['~25년','26년','공통'].includes(연도Raw) ? 연도Raw : '공통';
+                        parsed.push({
+                            작성일: ci작성 >= 0 ? normalizeDate(row[ci작성]) || '' : '',
+                            표시연도: 표시연도,
+                            유형: 유형,
+                            제목: String(제목),
+                            내용: ci내용 >= 0 ? String(row[ci내용] || '') : '',
+                            진행상태: ci상태 >= 0 ? String(row[ci상태] || '').trim() : '',
+                            고정: ci고정 >= 0 && String(row[ci고정] || '').toUpperCase() === 'Y'
+                        });
+                    }
+                    notices = parsed;
+                    saveNoticesToStorage();
+                    renderNotices();
+                    closeUploadModal();
+                    document.getElementById('noticeFileInput').value = '';
+                    alert(`공지 ${notices.length}건 불러옴 ✅`);
+                } catch (err) {
+                    console.error('Notice 로드 오류:', err);
+                    alert('Notice 파일 처리 실패: ' + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function saveNoticesToStorage() {
+            try { localStorage.setItem('dashboardNotices', JSON.stringify(notices)); }
+            catch (e) { console.warn('Notice 저장 실패:', e); }
+        }
+        function loadNoticesFromStorage() {
+            try {
+                const saved = localStorage.getItem('dashboardNotices');
+                if (saved) {
+                    notices = JSON.parse(saved);
+                    renderNotices();
+                }
+            } catch (e) { console.warn('Notice 복원 실패:', e); }
         }
 
         function loadExcel(event) {
@@ -1710,6 +1907,8 @@
             return Math.round((d1 - d2) / (1000 * 60 * 60 * 24));
         }
 
+        // ===== 매출현황.xlsx 통합 파싱 =====
+        // 5개 시트: 컨설팅(A) / 기술자문료(None) / 특허료(C) / 자재판매(B) / 2025현장 미수금관리(A, 가로→세로)
         function processExcelData(arrayBuffer, updateTime) {
             try {
                 const prevUnpaid = rawData.filter(r => !r['입금일']);
@@ -1720,52 +1919,170 @@
 
                 const data = new Uint8Array(arrayBuffer);
                 const workbook = XLSX.read(data, { type: 'array' });
-
-                const sheetName = workbook.SheetNames.find(n => n === '전체') || workbook.SheetNames[0];
-                const sheet = workbook.Sheets[sheetName];
-                const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-                const headerRow = json.findIndex(row => row && (row.includes('순번') || row.includes('업체명')));
-                if (headerRow < 0) { alert('올바른 형식의 파일이 아닙니다.'); return; }
-                originalHeaderRowIdx = headerRow;
-
-                const headers = json[headerRow];
                 rawData = [];
 
-                for (let i = headerRow + 1; i < json.length; i++) {
-                    const row = json[i];
-                    if (!row) continue;
+                // 헬퍼: 셀 값을 숫자로
+                const toNum = (v) => {
+                    if (v === null || v === undefined || v === '') return 0;
+                    if (typeof v === 'number') return v;
+                    if (typeof v === 'string') {
+                        const n = parseFloat(v.replace(/,/g, '').trim());
+                        return isNaN(n) ? 0 : n;
+                    }
+                    return 0;
+                };
 
-                    const obj = {};
-                    headers.forEach((h, idx) => { if (h) obj[h] = row[idx]; });
-                    if (!obj['업체명']) continue;
-                    obj['_originalRowIdx'] = i; // 원본 엑셀 행 번호 (0-based, json 배열 인덱스)
+                // 1) 26년 데이터: 4개 시트 (엑셀 대시보드 공식 방식)
+                //    미수금액 = 수금예정액(V+)/1.1, 단계 = '입금지연' 컬럼값(관리/장기미수)
+                //    컨설팅/기술자문료는 매출일 2026년 조건, 특허료/자재판매는 조건 없음
+                const sheetConfigs = [
+                    { name: '컨설팅',     track: 'A', dateCond: true  },
+                    { name: '기술자문료', track: 'C', dateCond: true  },
+                    { name: '특허료',     track: 'C', dateCond: false },
+                    { name: '자재판매',   track: 'B', dateCond: false }
+                ];
+                const in2026 = (d) => {
+                    const s = normalizeDate(d);
+                    return s && s >= '2026-01-01' && s <= '2026-12-31';
+                };
 
-                    const gubun = obj['구분'] || '';
-                    if (['선급금', '중도금', '잔금'].includes(gubun)) obj['트랙'] = 'A';
-                    else if (gubun === '자재') obj['트랙'] = 'B';
-                    else if (gubun === '특허료') obj['트랙'] = 'C';
+                for (const cfg of sheetConfigs) {
+                    if (!workbook.SheetNames.includes(cfg.name)) continue;
+                    const sheet = workbook.Sheets[cfg.name];
+                    const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                    if (!json.length) continue;
+                    const headers = json[0];
+                    if (!headers) continue;
+                    const idxOf = (name) => headers.findIndex(h => h === name);
+                    const ci수금 = idxOf('수금예정액(V+)');
+                    const ci단계 = idxOf('입금지연');
+                    const ci업체 = idxOf('업체명');
+                    const ci현장 = idxOf('현장명');
+                    const ci구분 = idxOf('구분');
+                    const ci매출일 = idxOf('매출일');
+                    const ci입금일 = idxOf('입금일');
+                    const ci예정 = idxOf('입금예정일');
+                    const ci예외 = idxOf('예외여부');
+                    const ci예외사유 = idxOf('예외사유');
+                    let ci매출 = idxOf('매출금액(v-)');
+                    if (ci매출 < 0) ci매출 = idxOf('매출액(v-)');
 
-                    // 날짜 필드를 yyyy-mm-dd 문자열로 정규화 (타임존 문제 방지)
-                    if (obj['계산서발행일']) obj['계산서발행일'] = normalizeDate(obj['계산서발행일']);
-                    if (obj['예상입금일']) obj['예상입금일'] = normalizeDate(obj['예상입금일']);
-                    if (obj['예정입금일']) obj['예정입금일'] = normalizeDate(obj['예정입금일']);
-                    if (obj['입금일']) obj['입금일'] = normalizeDate(obj['입금일']);
+                    for (let i = 1; i < json.length; i++) {
+                        const row = json[i];
+                        if (!row || !row.length) continue;
+                        const 업체 = ci업체 >= 0 ? row[ci업체] : null;
+                        if (!업체) continue;
+                        const 매출일Raw = ci매출일 >= 0 ? row[ci매출일] : null;
+                        // 컨설팅/기술자문료: 매출일 2026년만 (엑셀 SUMIFS 조건)
+                        if (cfg.dateCond && !in2026(매출일Raw)) continue;
 
-                    // 경과일 계산: 입금일이 있으면 입금일-발행일, 없으면 오늘-발행일
-                    if (obj['계산서발행일']) {
-                        if (obj['입금일']) {
-                            obj['경과일'] = diffDaysFromStr(obj['입금일'], obj['계산서발행일']);
-                        } else {
-                            obj['경과일'] = diffDaysFromStr(todayStr(), obj['계산서발행일']);
-                        }
-                    } else { obj['경과일'] = 0; }
+                        const 수금예정 = ci수금 >= 0 ? toNum(row[ci수금]) : 0;
+                        const 단계Raw = ci단계 >= 0 ? row[ci단계] : null;
+                        const 단계 = 단계Raw === '관리' ? '관리' : (단계Raw === '장기미수' ? '연체' : '정상');
+                        const 미수 = 수금예정 / 1.1;
 
-                    obj['단계'] = calculateStage(obj);
-                    obj['미수금액'] = obj['미수금액(v-)'] || obj['미수금액'] || 0;
+                        let 구분 = ci구분 >= 0 ? (row[ci구분] || '') : '';
+                        if (cfg.name === '자재판매') 구분 = '자재';
+                        else if (cfg.name === '특허료') 구분 = '특허료';
+                        else if (cfg.name === '기술자문료' && !구분) 구분 = '기술자문료';
+                        if (구분 === '선금') 구분 = '선급금';
 
-                    rawData.push(obj);
+                        const 입금일Raw = ci입금일 >= 0 ? row[ci입금일] : null;
+                        const obj = {
+                            '업체명': 업체,
+                            '현장명': ci현장 >= 0 ? (row[ci현장] || '') : '',
+                            '구분': 구분,
+                            '트랙': cfg.track,
+                            '연도': '26년',
+                            '계산서발행일': normalizeDate(매출일Raw),
+                            '입금일': 입금일Raw ? normalizeDate(입금일Raw) : null,
+                            '예상입금일': (ci예정 >= 0 && row[ci예정]) ? normalizeDate(row[ci예정]) : null,
+                            '매출금액': ci매출 >= 0 ? toNum(row[ci매출]) : 0,
+                            '수금예정액': 수금예정,
+                            '미수금액': 미수,
+                            '단계': 단계,
+                            '예외여부': (ci예외 >= 0 && row[ci예외] === 'Y') ? 'Y' : 'N',
+                            '예외사유': (ci예외사유 >= 0 && row[ci예외사유]) ? row[ci예외사유] : '',
+                            '_src시트': cfg.name,
+                            '_원본행': i
+                        };
+                        if (obj['계산서발행일']) {
+                            obj['경과일'] = obj['입금일']
+                                ? diffDaysFromStr(obj['입금일'], obj['계산서발행일'])
+                                : diffDaysFromStr(todayStr(), obj['계산서발행일']);
+                        } else { obj['경과일'] = 0; }
+                        rawData.push(obj);
+                    }
                 }
+
+                // 2) 2025현장 미수금관리 시트 → "# ~25년 이전 미수금 리스트" 블록만 사용
+                //    이 시트는 6개 블록(컨설팅/특허/솔루션/자재 관리표 + ~25년 미수금 리스트)이 섞여 있음.
+                //    그 중 마지막 블록(헤더: 계산서발행일|트랙|업체명...)만 평면 구조로 읽음.
+                const sheet25Name = '2025현장 미수금관리';
+                if (workbook.SheetNames.includes(sheet25Name)) {
+                    const sheet25 = workbook.Sheets[sheet25Name];
+                    const json25 = XLSX.utils.sheet_to_json(sheet25, { header: 1 });
+                    // "계산서발행일" + "트랙" 헤더 행 찾기
+                    let hdrIdx = -1;
+                    for (let i = 0; i < json25.length; i++) {
+                        const row = json25[i];
+                        if (row && row[0] === '계산서발행일' && row[1] === '트랙') { hdrIdx = i; break; }
+                    }
+                    if (hdrIdx >= 0) {
+                        const trackMap = (t) => {
+                            if (!t) return null;
+                            const s = String(t);
+                            if (s.includes('컨설팅')) return 'A';
+                            if (s.includes('자재')) return 'B';
+                            if (s.includes('특허') || s.includes('기술자문') || s.includes('솔루션')) return 'C';
+                            return null;
+                        };
+                        for (let i = hdrIdx + 1; i < json25.length; i++) {
+                            const row = json25[i];
+                            if (!row || !row.length) continue;
+                            const 발행 = row[0];
+                            const 업체 = row[2];
+                            if (!업체 || !발행) continue;
+                            const 발행정규화 = normalizeDate(발행);
+                            if (!발행정규화) continue;
+                            const 입금Raw = row[9];
+                            const 미수 = toNum(row[5]);
+                            // 블록6 단계 컬럼(col 7): 장기미수/관리 등 이미 계산됨
+                            const 단계Raw = row[7];
+                            const obj = {
+                                '업체명': 업체,
+                                '현장명': row[3] || '',
+                                '구분': row[4] || '',
+                                '트랙': trackMap(row[1]),
+                                '연도': '~25년',
+                                '계산서발행일': 발행정규화,
+                                '입금일': 입금Raw ? normalizeDate(입금Raw) : null,
+                                '예상입금일': row[8] ? normalizeDate(row[8]) : null,
+                                '매출금액': 미수,
+                                '수금예정액': 입금Raw ? 0 : 미수,
+                                '미수금액': 입금Raw ? 0 : 미수,
+                                '단계': 단계Raw === '관리' ? '관리' : (입금Raw ? '입금완료' : '연체'),
+                                '_src시트': sheet25Name,
+                                '_원본행': i
+                            };
+                            if (obj['계산서발행일']) {
+                                obj['경과일'] = obj['입금일']
+                                    ? diffDaysFromStr(obj['입금일'], obj['계산서발행일'])
+                                    : diffDaysFromStr(todayStr(), obj['계산서발행일']);
+                            } else { obj['경과일'] = 0; }
+                            rawData.push(obj);
+                        }
+                    }
+                }
+
+                // 공지(Notice)는 별도 파일에서 관리 (loadNoticeExcel) - 매출현황과 완전 분리
+
+                if (rawData.length === 0) {
+                    alert('데이터를 찾을 수 없습니다. 매출현황 엑셀 형식이 맞는지 확인해주세요.');
+                    return;
+                }
+
+                originalHeaderRowIdx = 0; // 호환 변수
 
                 document.getElementById('emptyState').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
@@ -1775,11 +2092,15 @@
                 document.getElementById('updateDate').textContent = y + '-' + m + '-' + d + ' ' + hh + ':' + mm + ' 업데이트';
                 document.getElementById('liveBadge').classList.remove('hidden');
 
-                // localStorage에 데이터 저장
-                saveDataToStorage();
+                // 자동 검증 출력 (콘솔)
+                const _unpaid = rawData.filter(r => !r['입금일']);
+                const _mng = _unpaid.filter(r => r['단계']==='관리' || r['단계']==='연체');
+                console.log(`[매출현황 통합] 전체: ${rawData.length}건, unpaid: ${_unpaid.length}건, 관리미수: ${_mng.length}건 / ${(_mng.reduce((s,r)=>s+(r['미수금액']||0),0)/1e8).toFixed(2)}억`);
 
+                saveDataToStorage();
+                saveSnapshot();   // 매출현황 업로드 시 스냅샷 자동 저장 (변동 추적용)
                 renderDashboard();
-            } catch (err) { console.error(err); alert('파일 읽기 오류'); }
+            } catch (err) { console.error(err); alert('파일 읽기 오류: ' + err.message); }
         }
 
         // localStorage 저장/불러오기
@@ -1902,9 +2223,174 @@
             return 'danger';
         }
 
+        // 연도 토글 전환
+        function switchYear(y) {
+            currentYear = y;
+            const b26 = document.getElementById('yearBtn26');
+            const b25 = document.getElementById('yearBtn25');
+            if (b26 && b25) {
+                b26.classList.toggle('active', y === '26년');
+                b25.classList.toggle('active', y === '~25년');
+            }
+            currentTrack = '';
+            currentPage = 1;
+            renderDashboard();
+            renderNotices();
+        }
+
+        // 순위 카드 접기/펼치기 (상태 localStorage 저장)
+        function toggleRanking() {
+            const sec = document.getElementById('rankingSection');
+            const icon = document.getElementById('rankingToggleIcon');
+            const label = document.getElementById('rankingToggleLabel');
+            if (!sec) return;
+            const isOpen = sec.style.display !== 'none';
+            sec.style.display = isOpen ? 'none' : 'block';
+            icon.textContent = isOpen ? '▶' : '▼';
+            label.textContent = isOpen ? '펼치기' : '접기';
+            try { localStorage.setItem('rankingExpanded', isOpen ? 'N' : 'Y'); } catch (e) {}
+        }
+        function restoreRankingState() {
+            try {
+                if (localStorage.getItem('rankingExpanded') === 'Y') {
+                    // 펼친 상태로 복원
+                    const sec = document.getElementById('rankingSection');
+                    const icon = document.getElementById('rankingToggleIcon');
+                    const label = document.getElementById('rankingToggleLabel');
+                    if (sec) { sec.style.display = 'block'; icon.textContent = '▼'; label.textContent = '접기'; }
+                }
+            } catch (e) {}
+        }
+
+        // 현재 선택 연도의 기준 데이터 (26년=엑셀공식 전체, ~25년=입금일 공란)
+        function getYearBase() {
+            const yd = rawData.filter(r => r['연도'] === currentYear);
+            return currentYear === '26년' ? yd : yd.filter(r => !r['입금일']);
+        }
+
+        // 리스트/순위/상세/카드용: 미수금 잔액 있는 건 (음수 자재반환 포함, 입금완료 0만 제외)
+        function getYearActive() {
+            return rawData.filter(r => r['연도'] === currentYear && (r['미수금액'] || 0) !== 0);
+        }
+
+        // 2026년 대금회수율: (확정매출 - 수금예정액) / 확정매출
+        // 엑셀 정의 그대로 (4개 카테고리 = 컨설팅/기술자문료/특허료/자재판매 합)
+        function calcRecoveryStats() {
+            const data26 = rawData.filter(r => r['연도'] === '26년');
+            const 확정매출 = data26.reduce((s, r) => s + (r['매출금액'] || 0), 0);
+            const 수금예정 = data26.reduce((s, r) => s + (r['미수금액'] || 0), 0);
+            const 수금률 = 확정매출 > 0 ? (확정매출 - 수금예정) / 확정매출 : 0;
+            // 이번달 회수액 = 입금일이 이번달인 건의 매출금액(V-) 합
+            const now = new Date();
+            const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+            const 이번달회수 = data26.filter(r => r['입금일'] && r['입금일'].startsWith(ym))
+                                    .reduce((s, r) => s + (r['매출금액'] || 0), 0);
+            return { 확정매출, 수금예정, 수금률, 이번달회수 };
+        }
+
+        // 매출현황 업로드 시마다 스냅샷 자동 저장 (같은 날은 마지막 값만)
+        function saveSnapshot() {
+            try {
+                const data26 = rawData.filter(r => r['연도'] === '26년');
+                const data25 = rawData.filter(r => r['연도'] === '~25년' && (r['미수금액'] || 0) !== 0);
+                const active26 = data26.filter(r => (r['미수금액'] || 0) !== 0);
+                const 수금예정 = active26.reduce((s, r) => s + (r['미수금액'] || 0), 0);
+                const 관리미수 = active26.filter(r => r['단계'] === '관리' || r['단계'] === '연체')
+                                        .reduce((s, r) => s + (r['미수금액'] || 0), 0);
+                const 장기미수 = active26.filter(r => r['단계'] === '연체')
+                                        .reduce((s, r) => s + (r['미수금액'] || 0), 0);
+                const 미수25 = data25.reduce((s, r) => s + (r['미수금액'] || 0), 0);
+                const rec = calcRecoveryStats();
+                const today = new Date().toISOString().split('T')[0];
+                let snaps = {};
+                try { snaps = JSON.parse(localStorage.getItem('dashboardSnapshots') || '{}'); } catch (e) {}
+                snaps[today] = {
+                    수금예정, 관리미수, 장기미수, 미수25,
+                    확정매출: rec.확정매출, 수금률: rec.수금률, 이번달회수: rec.이번달회수
+                };
+                // 최근 90개만 유지
+                const dates = Object.keys(snaps).sort();
+                if (dates.length > 90) {
+                    const keep = dates.slice(-90);
+                    snaps = Object.fromEntries(keep.map(d => [d, snaps[d]]));
+                }
+                localStorage.setItem('dashboardSnapshots', JSON.stringify(snaps));
+            } catch (e) { console.warn('스냅샷 저장 실패:', e); }
+        }
+
+        // 이전 스냅샷 가져오기 (오늘 제외, 가장 최근)
+        function getPreviousSnapshot() {
+            try {
+                const snaps = JSON.parse(localStorage.getItem('dashboardSnapshots') || '{}');
+                const today = new Date().toISOString().split('T')[0];
+                const dates = Object.keys(snaps).filter(d => d !== today).sort();
+                if (dates.length === 0) return null;
+                return { date: dates[dates.length - 1], data: snaps[dates[dates.length - 1]] };
+            } catch (e) { return null; }
+        }
+
+        // 카드에 ▲▼ 변동 표시
+        function renderChange(elId, current, previous, type) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            if (previous === null || previous === undefined) { el.classList.add('hidden'); return; }
+            const diff = current - previous;
+            if (Math.abs(diff) < (type === 'rate' ? 0.001 : 1)) { el.classList.add('hidden'); return; }
+            const up = diff > 0;
+            const arrow = up ? '▲' : '▼';
+            let text = '';
+            if (type === 'rate') text = `${arrow} ${(Math.abs(diff) * 100).toFixed(1)}%p`;
+            else text = `${arrow} ${formatAmount2(Math.abs(diff))}`;
+            el.textContent = text;
+            // 회수율은 오를수록 좋음, 미수금은 내릴수록 좋음
+            const isGood = type === 'rate' ? up : !up;
+            el.classList.remove('hidden');
+            el.classList.toggle('up', !isGood);
+            el.classList.toggle('down', isGood);
+        }
+
+        // 공지·참고사항 렌더링 (현재 토글 연도 + 공통)
+        function renderNotices() {
+            const board = document.getElementById('noticeBoard');
+            const list = document.getElementById('noticeList');
+            const countEl = document.getElementById('noticeCount');
+            if (!board || !list) return;
+            if (!notices || notices.length === 0) { board.style.display = 'none'; return; }
+            const filtered = notices.filter(n => n.표시연도 === currentYear || n.표시연도 === '공통');
+            if (filtered.length === 0) { board.style.display = 'none'; return; }
+            // 정렬: 고정 우선, 작성일 내림차순
+            filtered.sort((a, b) => {
+                if (a.고정 !== b.고정) return (b.고정 ? 1 : 0) - (a.고정 ? 1 : 0);
+                return (b.작성일 || '').localeCompare(a.작성일 || '');
+            });
+            const statusMap = {
+                '긴급조치': 'emergency', '진행중': 'progress', '협의중': 'negotiate',
+                '검토중': 'review', '발송완료': 'sent', '완료': 'done', '보류': 'hold'
+            };
+            const esc = (s) => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+            board.style.display = 'block';
+            countEl.textContent = `(${filtered.length})`;
+            list.innerHTML = filtered.map(n => {
+                const statusCls = statusMap[n.진행상태] || 'default';
+                return `
+                    <div class="notice-card type-${n.유형}">
+                        ${n.고정 ? '<div class="notice-pin">📌</div>' : ''}
+                        <div class="notice-type-badge ${n.유형}">${n.유형}</div>
+                        <div class="notice-body">
+                            <div class="notice-title">${esc(n.제목)}</div>
+                            ${n.내용 ? `<div class="notice-content">${esc(n.내용)}</div>` : ''}
+                            <div class="notice-meta">
+                                ${n.작성일 ? `<span>${esc(n.작성일)}</span>` : ''}
+                                ${n.진행상태 ? `<span class="notice-status ${statusCls}">${esc(n.진행상태)}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
         function renderDashboard() {
-            // 입금일이 없는 건만 미수금으로 집계 (입금 완료 건 제외)
-            const unpaidData = rawData.filter(r => !r['입금일']);
+            // 연도 토글: 26년(엑셀 공식) | ~25년(블록6). 실제 미수금 있는 건만 집계
+            const unpaidData = getYearActive();
 
             const total = unpaidData.reduce((s, r) => s + (r['미수금액'] || 0), 0);
             const manageOverdueData = unpaidData.filter(r => r['단계'] === '관리' || r['단계'] === '연체');
@@ -1914,42 +2400,48 @@
             const overdueData = unpaidData.filter(r => r['단계'] === '연체');
             const overdueAmount = overdueData.reduce((s, r) => s + (r['미수금액'] || 0), 0);
 
-            // 회신대기 현장 (예외 제외, 입금일 미확보)
-            const noComm = unpaidData.filter(r => r['예외여부'] !== 'Y' && !r['예상입금일'] && !r['예정입금일']);
-            const noCommAmount = noComm.reduce((s, r) => s + (r['미수금액'] || 0), 0);
-
-            // 예외 처리 (입금 완료 건 제외)
-            const exceptionY = unpaidData.filter(r => r['예외여부'] === 'Y');
-            const exYAmount = exceptionY.reduce((s, r) => s + (r['미수금액'] || 0), 0);
-
             // 메인 지표
             document.getElementById('totalAmount').textContent = formatAmount(total);
             document.getElementById('totalCount').textContent = unpaidData.length + '건';
             document.getElementById('manageAmount').textContent = formatAmount(manageOverdue);
             document.getElementById('manageCount').textContent = manageOverdueData.length + '건';
 
-            // 관리미수금 연도별 분리: ~25년 / 26년
-            const manageBefore26 = manageOverdueData.filter(r => {
-                const d = r['계산서발행일'];
-                return d && d.substring(0, 4) < '2026';
-            });
-            const manage26 = manageOverdueData.filter(r => {
-                const d = r['계산서발행일'];
-                return d && d.substring(0, 4) >= '2026';
-            });
+            // 연도 카드 보조표시: 현재 연도 / 반대 연도 요약 (필터 기준 통일: 미수≠0, 음수 포함)
+            const otherYear = currentYear === '26년' ? '~25년' : '26년';
+            const otherData = rawData.filter(r => r['연도'] === otherYear && (r['미수금액'] || 0) !== 0);
+            const otherMng = otherData.filter(r => r['단계'] === '관리' || r['단계'] === '연체');
+            const manageBefore26 = currentYear === '~25년' ? manageOverdueData : otherMng;
+            const manage26 = currentYear === '26년' ? manageOverdueData : otherMng;
             const manageBefore26Amount = manageBefore26.reduce((s, r) => s + (r['미수금액'] || 0), 0);
             const manage26Amount = manage26.reduce((s, r) => s + (r['미수금액'] || 0), 0);
 
             document.getElementById('manageBefore26').textContent = formatAmount2(manageBefore26Amount);
             document.getElementById('manageBefore26Count').textContent = manageBefore26.length + '건';
-            document.getElementById('manage26').textContent = formatAmount2(manage26Amount);
-            document.getElementById('manage26Count').textContent = manage26.length + '건';
+            if (currentYear === '~25년') {
+                // ~25년 토글: 26년 보조숫자 숨김
+                document.getElementById('manage26').textContent = '-';
+                document.getElementById('manage26Count').textContent = '';
+            } else {
+                document.getElementById('manage26').textContent = formatAmount2(manage26Amount);
+                document.getElementById('manage26Count').textContent = manage26.length + '건';
+            }
             document.getElementById('overdueAmount').textContent = formatAmount(overdueAmount);
             document.getElementById('overdueDetail').textContent = `${overdueData.length}건`;
-            document.getElementById('noCommCount').textContent = noComm.length + '건';
-            document.getElementById('noCommAmount').textContent = formatAmount(noCommAmount);
-            document.getElementById('exceptionCount').textContent = formatAmount(exYAmount);
-            document.getElementById('exceptionAmount').textContent = exceptionY.length + '건';
+
+            // 4번째 카드: 2026년 대금회수율 (엑셀 정의: (확정매출-수금예정액)/확정매출)
+            const rec = calcRecoveryStats();
+            document.getElementById('recoveryRate').textContent = (rec.수금률 * 100).toFixed(1) + '%';
+            document.getElementById('recoveryDetail').textContent =
+                `${formatAmount2(rec.확정매출 - rec.수금예정)} / ${formatAmount2(rec.확정매출)}`;
+            document.getElementById('thisMonthIncome').textContent = formatAmount2(rec.이번달회수);
+
+            // 스냅샷 기반 카드 ▲▼ 변동 표시 (이전 스냅샷 있을 때만)
+            const prev = getPreviousSnapshot();
+            if (prev) {
+                renderChange('totalChange', total, prev.data.수금예정, 'amount');
+                renderChange('manageChange', manageOverdue, prev.data.관리미수, 'amount');
+                renderChange('recoveryChange', rec.수금률, prev.data.수금률, 'rate');
+            }
 
             // 입금 완료 건수 표시 (전체 데이터 중 입금 완료)
             const paidData = rawData.filter(r => r['입금일']);
@@ -1986,14 +2478,15 @@
             renderTopAmount();
             renderTopDays();
             renderDetailTable();
+            renderNotices();
         }
 
         function renderTrackCard(track) {
             const excludeToggle = document.getElementById(`track${track}ExcludeToggle`);
             const excludeException = excludeToggle ? excludeToggle.checked : false;
 
-            // 입금 완료 건 제외
-            let trackData = rawData.filter(r => r['트랙'] === track && !r['입금일']);
+            // 실제 미수금 있는 건만 + 현재 연도
+            let trackData = getYearActive().filter(r => r['트랙'] === track);
             if (excludeException) {
                 trackData = trackData.filter(r => r['예외여부'] !== 'Y');
             }
@@ -2043,8 +2536,7 @@
 
         function renderDistribution() {
             const exclude = document.getElementById('distExcludeException').checked;
-            // 입금 완료 건 제외
-            let filtered = rawData.filter(r => !r['입금일']);
+            let filtered = getYearActive();
             if (exclude) filtered = filtered.filter(r => r['예외여부'] !== 'Y');
 
             const ranges = [
@@ -2150,8 +2642,7 @@
         }
 
         function renderActionList() {
-            // 입금 완료 건 제외
-            let baseData = rawData.filter(r => r['예외여부'] !== 'Y' && !r['입금일']);
+            let baseData = getYearActive().filter(r => r['예외여부'] !== 'Y');
             if (actionTabTrack) baseData = baseData.filter(r => r['트랙'] === actionTabTrack);
 
             const actionItems = baseData.filter(r => {
@@ -2187,8 +2678,8 @@
         function renderDueList() {
             const tStr = todayStr();
 
-            // 입금 완료 건 제외
-            let baseData = rawData.filter(r => r['예외여부'] !== 'Y' && !r['입금일']);
+            // 실제 미수금 있는 건만 + 현재 연도
+            let baseData = getYearActive().filter(r => r['예외여부'] !== 'Y');
             if (dueTabTrack) baseData = baseData.filter(r => r['트랙'] === dueTabTrack);
 
             let dueItems = baseData.filter(r => {
@@ -2265,8 +2756,7 @@
             // 각 카드별 개별 예외제외 토글
             const toggleId = card === 'site' ? 'rankSiteExcludeException' : card === 'amount' ? 'rankAmountExcludeException' : 'rankDaysExcludeException';
             const exclude = document.getElementById(toggleId).checked;
-            // 입금 완료 건 제외
-            let filtered = rawData.filter(r => !r['입금일']);
+            let filtered = getYearActive();
             if (exclude) filtered = filtered.filter(r => r['예외여부'] !== 'Y');
             const track = card === 'site' ? rankTrackSite : card === 'amount' ? rankTrackAmount : rankTrackDays;
             if (track) filtered = filtered.filter(r => r['트랙'] === track);
@@ -2508,7 +2998,6 @@
 
         function resetFilters() {
             document.getElementById('filterStage').value = '';
-            document.getElementById('filterException').value = '';
             document.getElementById('filterComm').value = '';
             document.getElementById('filterPaid').value = 'unpaid';
             document.getElementById('searchInput').value = '';
@@ -2528,23 +3017,20 @@
 
         function getFilteredData() {
             const stageFilter = document.getElementById('filterStage').value;
-            const exceptionFilter = document.getElementById('filterException').value;
             const commFilter = document.getElementById('filterComm').value;
             const paidFilter = document.getElementById('filterPaid').value;
             const searchText = document.getElementById('searchInput').value.toLowerCase();
 
-            let filtered = rawData;
+            let filtered = rawData.filter(r => r['연도'] === currentYear);
             if (currentTrack) filtered = filtered.filter(r => r['트랙'] === currentTrack);
-            // 입금 여부 필터
-            if (paidFilter === 'unpaid') filtered = filtered.filter(r => !r['입금일']);
-            else if (paidFilter === 'paid') filtered = filtered.filter(r => r['입금일']);
+            // 입금 여부 필터: 미수금만=잔액 있음(음수 포함), 입금완료만=미수0
+            if (paidFilter === 'unpaid') filtered = filtered.filter(r => (r['미수금액'] || 0) !== 0);
+            else if (paidFilter === 'paid') filtered = filtered.filter(r => (r['미수금액'] || 0) === 0);
             // 단계 필터: 표시값을 내부값으로 변환
             if (stageFilter) {
                 const internalStage = stageInternalName[stageFilter] || stageFilter;
                 filtered = filtered.filter(r => r['단계'] === internalStage);
             }
-            if (exceptionFilter === 'Y') filtered = filtered.filter(r => r['예외여부'] === 'Y');
-            else if (exceptionFilter === 'N') filtered = filtered.filter(r => r['예외여부'] !== 'Y');
             if (commFilter === 'Y') filtered = filtered.filter(r => r['예상입금일'] || r['예정입금일']);
             else if (commFilter === 'N') filtered = filtered.filter(r => !r['예상입금일'] && !r['예정입금일']);
             if (searchText) filtered = filtered.filter(r => (r['업체명'] || '').toLowerCase().includes(searchText) || (r['현장명'] || '').toLowerCase().includes(searchText));
@@ -2606,7 +3092,6 @@
                     <td class="center"><span class="badge badge-${stageClass}">${getDisplayStage(stage)}</span></td>
                     <td>${expectedStr}</td>
                     <td class="center">${paidDate ? '<span class="badge badge-info">' + paidDate + '</span>' : '-'}</td>
-                    <td class="center">${r['예외여부'] === 'Y' ? '<span class="badge badge-purple">예외</span>' : '-'}</td>
                 </tr>`;
             }).join('');
 
@@ -2641,95 +3126,10 @@
                 return;
             }
 
-            const filtered = getFilteredData();
-            const isFullData = filtered.length === rawData.length;
-
-            if (isFullData) {
-                // 전체 데이터 → 원본 그대로 다운로드
-                const blob = new Blob([originalFileBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                triggerDownload(blob, originalFileName || '미수금_대시보드.xlsx');
-                return;
-            }
-
-            // 필터 적용 → 원본 XML에서 해당 행만 남기고 나머지 삭제
-            try {
-                const zip = await JSZip.loadAsync(originalFileBuffer);
-
-                // 시트 XML 찾기
-                const sheetPath = 'xl/worksheets/sheet1.xml';
-                const sheetXml = await zip.file(sheetPath).async('string');
-
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(sheetXml, 'application/xml');
-                const sheetData = xmlDoc.querySelector('sheetData');
-                const allRows = Array.from(sheetData.querySelectorAll('row'));
-
-                // 보존할 엑셀 행 번호 Set (1-based: 엑셀 행번호 = json인덱스 + 1)
-                const keepRowNums = new Set();
-
-                // 헤더 행과 그 위의 행들은 모두 보존
-                for (let i = 0; i <= originalHeaderRowIdx; i++) {
-                    keepRowNums.add(i + 1);
-                }
-
-                // 필터된 데이터의 원본 행 번호 보존
-                filtered.forEach(r => {
-                    if (r['_originalRowIdx'] !== undefined) {
-                        keepRowNums.add(r['_originalRowIdx'] + 1);
-                    }
-                });
-
-                // 보존 대상이 아닌 행 삭제
-                allRows.forEach(rowEl => {
-                    const rowNum = parseInt(rowEl.getAttribute('r'));
-                    if (!keepRowNums.has(rowNum)) {
-                        sheetData.removeChild(rowEl);
-                    }
-                });
-
-                // 남은 행들의 행번호를 순차적으로 재정렬 (1부터)
-                const remainingRows = Array.from(sheetData.querySelectorAll('row'));
-                remainingRows.forEach((rowEl, idx) => {
-                    const newRowNum = idx + 1;
-                    const oldRowNum = rowEl.getAttribute('r');
-                    rowEl.setAttribute('r', newRowNum);
-
-                    // 행 내 셀의 참조도 업데이트 (예: B5 → B2)
-                    const cells = rowEl.querySelectorAll('c');
-                    cells.forEach(cell => {
-                        const ref = cell.getAttribute('r');
-                        if (ref) {
-                            const colLetter = ref.replace(/[0-9]/g, '');
-                            cell.setAttribute('r', colLetter + newRowNum);
-                        }
-                    });
-                });
-
-                // dimension 업데이트
-                const dimension = xmlDoc.querySelector('dimension');
-                if (dimension) {
-                    const refAttr = dimension.getAttribute('ref');
-                    if (refAttr && refAttr.includes(':')) {
-                        const endCol = refAttr.split(':')[1].replace(/[0-9]/g, '');
-                        dimension.setAttribute('ref', 'A1:' + endCol + remainingRows.length);
-                    }
-                }
-
-                // 직렬화 후 저장
-                const serializer = new XMLSerializer();
-                const newXml = serializer.serializeToString(xmlDoc);
-                zip.file(sheetPath, newXml);
-
-                const newBuffer = await zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-
-                const titles = { '': '전체', 'A': '컨설팅', 'B': '자재판매', 'C': '특허기술자문료' };
-                const fileName = `미수금현황_${titles[currentTrack] || '필터'}_${new Date().toISOString().slice(0,10)}.xlsx`;
-                triggerDownload(newBuffer, fileName);
-
-            } catch (err) {
-                console.error('필터 다운로드 오류:', err);
-                alert('필터 적용 다운로드 중 오류가 발생했습니다.');
-            }
+            // 매출현황 엑셀은 다중 시트 구조라 필터 적용 다운로드는 미지원
+            // 항상 원본 그대로 다운로드
+            const blob = new Blob([originalFileBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            triggerDownload(blob, originalFileName || '매출현황.xlsx');
         }
 
         function triggerDownload(blob, fileName) {
@@ -2766,10 +3166,12 @@
 
         // 페이지 로드 시: 서버 우선 → 실패 시 localStorage fallback
         async function initDashboard() {
+            restoreRankingState();
             const serverLoaded = await autoLoadExcelFromServer();
             if (!serverLoaded) {
                 loadDataFromStorage();
             }
+            loadNoticesFromStorage();
         }
 
         if (document.readyState === 'loading') {
