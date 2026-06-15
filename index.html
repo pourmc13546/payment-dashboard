@@ -3145,21 +3145,29 @@
 
         // 같은 폴더의 엑셀 파일을 자동으로 fetch하여 로드
         async function autoLoadExcelFromServer() {
-            const xlsxFiles = ['data.xlsx', '미수금_대시보드_260210.xlsx'];
-            for (const fileName of xlsxFiles) {
+            // 1순위: sales_dashboard(담당자가 올리는 곳)에 게시된 최신 매출현황 파일을 자동으로 읽어온다.
+            //        → 담당자가 그쪽에 업로드+푸시만 하면 이 대시보드(미수금)도 자동 동기화됨.
+            // 2순위: 이 repo에 직접 올린 파일(폴백). sales_dashboard가 잠시 안 될 때 대비.
+            const sources = [
+                { url: 'https://netformrnd.github.io/sales_dashboard/' + encodeURIComponent('매출현황.xlsx'), name: '매출현황.xlsx (sales_dashboard)' },
+                { url: './' + encodeURIComponent('data.xlsx'), name: 'data.xlsx (로컬)' },
+                { url: './' + encodeURIComponent('미수금_대시보드_260210.xlsx'), name: '미수금_대시보드_260210.xlsx (로컬)' }
+            ];
+            for (const src of sources) {
                 try {
-                    const response = await fetch('./' + encodeURIComponent(fileName));
+                    // 매 로드마다 타임스탬프를 붙여 캐시된 옛 데이터 대신 항상 최신본을 받는다.
+                    const response = await fetch(src.url + '?t=' + Date.now(), { cache: 'no-store' });
                     if (response.ok) {
                         const arrayBuffer = await response.arrayBuffer();
                         originalFileBuffer = arrayBuffer.slice(0);
-                        originalFileName = fileName;
+                        originalFileName = '매출현황.xlsx';
                         const lastModified = response.headers.get('Last-Modified');
                         const fileTime = lastModified ? new Date(lastModified) : null;
                         processExcelData(arrayBuffer, fileTime);
-                        console.log('엑셀 파일 자동 로드 완료:', fileName);
+                        console.log('엑셀 파일 자동 로드 완료:', src.name);
                         return true;
                     }
-                } catch (e) { console.warn('자동 로드 실패:', fileName, e); }
+                } catch (e) { console.warn('자동 로드 실패:', src.name, e); }
             }
             return false;
         }
