@@ -2346,26 +2346,7 @@
             const paidData = rawData.filter(r => r['입금일']);
             const paidCount = paidData.length;
 
-            // 전월 대비 (이전 데이터 있으면)
-            if (previousData) {
-                const totalChange = document.getElementById('totalChange');
-                const manageChange = document.getElementById('manageChange');
-
-                const totalDiff = total - previousData.total;
-                const manageDiff = manageOverdue - previousData.manage;
-
-                if (totalDiff !== 0) {
-                    totalChange.textContent = (totalDiff > 0 ? '▲ ' : '▼ ') + formatAmount(Math.abs(totalDiff));
-                    totalChange.className = 'stat-change ' + (totalDiff > 0 ? 'up' : 'down');
-                    totalChange.classList.remove('hidden');
-                }
-
-                if (manageDiff !== 0) {
-                    manageChange.textContent = (manageDiff > 0 ? '▲ ' : '▼ ') + formatAmount(Math.abs(manageDiff));
-                    manageChange.className = 'stat-change ' + (manageDiff > 0 ? 'up' : 'down');
-                    manageChange.classList.remove('hidden');
-                }
-            }
+            // [2026-10] '직전 데이터 비교' 표시 제거 — 비교 기준(전체 연도 vs 26년) 불일치로 오표시 발생
 
             renderTrackCard('A');
             renderTrackCard('B');
@@ -3387,11 +3368,16 @@
             // 대시보드 인증을 통과한 상태이므로 수신 시 이 페이지의 로그인 화면도 해제한다.
             (function () {
                 var NF_PARENT = 'https://netformrnd.github.io';      // 이 주소에서 온 메시지만 받음
+                var lastSig = null;
                 if (window.parent === window) return;                // 대시보드 안(iframe)에서 열렸을 때만 동작
                 window.addEventListener('message', function (e) {
                     if (e.origin !== NF_PARENT) return;              // 다른 곳에서 온 메시지는 무시
                     var d = e.data;
                     if (!d || d.type !== 'nf-sales-xlsx' || !d.buffer) return;
+                    // 같은 파일(같은 업데이트 시각·크기)이 다시 오면 무시 (대시보드는 요청 시 + 로드 완료 시 2회 전송)
+                    var sig = (d.updated || '') + '|' + d.buffer.byteLength;
+                    if (sig === lastSig) return;
+                    lastSig = sig;
                     var t = d.updated ? new Date(d.updated) : null;
                     if (t && isNaN(t.getTime())) t = null;
                     originalFileBuffer = d.buffer.slice(0);         // '원본 다운로드'용 (메모리에만 보관)
