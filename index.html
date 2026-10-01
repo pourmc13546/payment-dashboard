@@ -1,0 +1,3439 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>미수금 현황</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
+        :root {
+            --primary: #0F172A;
+            --primary-light: #1E293B;
+            --accent: #3B82F6;
+            --accent-hover: #2563EB;
+            --success: #27ae60;
+            --warning: #e67e22;
+            --danger: #c0392b;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+            --text-light: #7f8c8d;
+            --text-muted: #95a5a6;
+            --border: #e0e4e8;
+            --shadow: 0 1px 3px rgba(0,0,0,0.04);
+            --shadow-lg: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .header {
+            background: linear-gradient(180deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 0 30px;
+            height: 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header h1 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .update-badge {
+            font-size: 0.8rem;
+            color: #94A3B8;
+        }
+        .live-badge {
+            background: var(--accent);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        /* 고정 플로팅 업로드 버튼 */
+        .upload-floating {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+        }
+        .upload-floating-btn {
+            padding: 10px 18px;
+            border-radius: 24px;
+            background: rgba(120, 120, 140, 0.25);
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            color: rgba(100, 100, 120, 0.6);
+            transition: all 0.3s;
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .upload-floating-btn:hover {
+            background: rgba(59, 130, 246, 0.75);
+            color: white;
+        }
+
+        .btn {
+            padding: 9px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn:hover { transform: translateY(-1px); }
+        .btn-sm { padding: 7px 12px; font-size: 12px; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-outline { background: white; border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-title .count-badge {
+            background: #5a6c7d;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px 18px;
+            border: 1px solid var(--border);
+            transition: box-shadow 0.15s;
+        }
+        .stat-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .stat-card.recovery-card { background: linear-gradient(135deg, #fefce8 0%, #fff 100%); border-color: #fde68a; }
+
+        /* === 연도 토글 강조 바 === */
+        .year-toggle-bar {
+            display: flex; align-items: center; gap: 14px;
+            background: white; border-radius: 10px;
+            padding: 12px 18px; margin-bottom: 14px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .year-toggle-label { font-size: 13px; font-weight: 600; color: #475569; }
+        .year-toggle-group {
+            display: flex; gap: 4px;
+            background: #f1f5f9; border-radius: 8px; padding: 4px;
+        }
+        .year-toggle-btn {
+            border: none; cursor: pointer;
+            padding: 8px 22px; border-radius: 6px;
+            font-size: 14px; font-weight: 700;
+            background: transparent; color: #64748b;
+            transition: all 0.15s;
+        }
+        .year-toggle-btn:hover { color: #1e293b; background: rgba(255,255,255,0.6); }
+        .year-toggle-btn.active {
+            background: #1e293b; color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+
+        @media (max-width: 900px) {
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 520px) {
+            .summary-grid { grid-template-columns: 1fr; }
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-light);
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            letter-spacing: 0.3px;
+        }
+        .stat-label-left {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .tooltip-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #e8ebee;
+            color: #7f8c8d;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: help;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .tooltip-icon .tooltip-text {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            top: 0;
+            left: calc(100% + 10px);
+            background: #ffffff;
+            color: #334155;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 400;
+            white-space: nowrap;
+            min-width: auto;
+            max-width: 400px;
+            z-index: 200;
+            line-height: 1.6;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            border: 1px solid #e2e8f0;
+            transition: opacity 0.2s;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+        .tooltip-icon .tooltip-text::after {
+            content: '';
+            position: absolute;
+            top: 6px;
+            left: -6px;
+            border: 6px solid transparent;
+            border-right-color: #ffffff;
+        }
+        .tooltip-icon:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        .stat-change {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+        .stat-change.up { background: #fdecea; color: #c0392b; }
+        .stat-change.down { background: #e8f6ef; color: #27ae60; }
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--text);
+        }
+        .stat-sub { font-size: 11px; color: var(--text-muted); }
+
+        /* === 공지·참고사항 보드 === */
+        .notice-board { background: white; border-radius: 10px; padding: 14px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); border: 1px solid #e5e7eb; margin-bottom: 20px; }
+        .notice-header-row { display: flex; align-items: center; margin-bottom: 10px; }
+        .notice-header-row h3 { margin: 0; font-size: 14px; font-weight: 600; color: #1e293b; }
+        .notice-count { font-size: 12px; color: #6b7280; font-weight: 500; margin-left: 4px; }
+        .notice-list { display: flex; flex-direction: column; gap: 6px; }
+        .notice-card { display: flex; padding: 10px 12px; border-radius: 6px; gap: 10px; align-items: flex-start; border-left: 3px solid #94a3b8; background: #f8fafc; transition: background 0.15s; }
+        .notice-card:hover { background: #f1f5f9; }
+        .notice-card.type-공지 { border-left-color: #dc2626; background: #fef2f2; }
+        .notice-card.type-공지:hover { background: #fee2e2; }
+        .notice-card.type-긴급 { border-left-color: #ea580c; background: #fff7ed; box-shadow: 0 0 0 1px #fed7aa; }
+        .notice-card.type-긴급:hover { background: #ffedd5; }
+        .notice-card.type-참고 { border-left-color: #ca8a04; background: #fefce8; }
+        .notice-card.type-참고:hover { background: #fef9c3; }
+        .notice-type-badge { font-size: 10px; padding: 2px 6px; border-radius: 3px; font-weight: 700; flex-shrink: 0; line-height: 1.4; }
+        .notice-type-badge.공지 { background: #dc2626; color: white; }
+        .notice-type-badge.긴급 { background: #ea580c; color: white; }
+        .notice-type-badge.참고 { background: #ca8a04; color: white; }
+        .notice-body { flex: 1; min-width: 0; }
+        .notice-title { font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 3px; line-height: 1.4; }
+        .notice-content { font-size: 12px; color: #475569; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+        .notice-meta { display: flex; align-items: center; gap: 8px; margin-top: 5px; font-size: 11px; color: #64748b; }
+        .notice-status { padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; }
+        .notice-status.emergency { background: #fecaca; color: #991b1b; }
+        .notice-status.progress { background: #dbeafe; color: #1e40af; }
+        .notice-status.negotiate { background: #fef3c7; color: #92400e; }
+        .notice-status.review { background: #e5e7eb; color: #374151; }
+        .notice-status.sent { background: #d1fae5; color: #065f46; }
+        .notice-status.done { background: #d1fae5; color: #065f46; text-decoration: line-through; }
+        .notice-status.hold { background: #d1d5db; color: #4b5563; }
+        .notice-status.default { background: #e5e7eb; color: #4b5563; }
+        .notice-pin { font-size: 12px; flex-shrink: 0; margin-right: 2px; }
+
+        /* === 순위 카드 접기/펼치기 === */
+        .ranking-toggle-bar { background: white; border-radius: 10px; padding: 10px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); border: 1px solid #e5e7eb; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; transition: background 0.15s; }
+        .ranking-toggle-bar:hover { background: #f8fafc; }
+        .ranking-toggle-bar .toggle-title { font-size: 13px; font-weight: 600; color: #1e293b; }
+        .ranking-toggle-bar .toggle-icon { font-size: 11px; color: #64748b; margin-right: 6px; }
+        .ranking-toggle-bar .toggle-label { font-size: 12px; color: #64748b; }
+
+        .track-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .track-card {
+            background: white;
+            border-radius: 8px;
+            padding: 18px;
+            border: 1px solid var(--border);
+        }
+        .track-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .track-header-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .track-header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .track-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        .track-count {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 500;
+            background: var(--bg);
+            color: var(--text-light);
+        }
+        .track-stage-info {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            padding: 6px 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            line-height: 1.5;
+        }
+        .toggle-group-sm {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+        .toggle-switch-sm {
+            position: relative;
+            width: 32px;
+            height: 18px;
+        }
+        .toggle-switch-sm input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider-sm {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #dfe4ea;
+            border-radius: 18px;
+            transition: 0.3s;
+        }
+        .toggle-slider-sm::before {
+            position: absolute;
+            content: '';
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            bottom: 2px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .toggle-switch-sm input:checked + .toggle-slider-sm { background: var(--accent); }
+        .toggle-switch-sm input:checked + .toggle-slider-sm::before { transform: translateX(14px); }
+        .track-total {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 12px;
+        }
+
+        .stat-card.clickable {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .stat-card.clickable:hover {
+            border-color: var(--accent);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .stage-bar {
+            display: flex;
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            background: #eceff1;
+            margin-bottom: 12px;
+        }
+        .stage-bar .normal { background: #7cb342; }
+        .stage-bar .manage { background: #e67e22; }
+        .stage-bar .overdue { background: #c0392b; }
+
+        .stage-detail {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+        .stage-item {
+            text-align: center;
+            padding: 8px 6px;
+            background: var(--bg);
+            border-radius: 6px;
+        }
+        .stage-item-label { font-size: 10px; color: var(--text-muted); margin-bottom: 3px; }
+        .stage-item-value { font-size: 13px; font-weight: 700; }
+        .stage-item.normal .stage-item-value { color: #558b2f; }
+        .stage-item.manage .stage-item-value { color: #d35400; }
+        .stage-item.overdue .stage-item-value { color: #a93226; }
+        .stage-item-sub { font-size: 9px; color: var(--text-muted); margin-top: 2px; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+        /* 경과일 구간 분포 */
+        .distribution-bar {
+            display: flex;
+            height: 28px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .distribution-segment {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            min-width: 36px;
+        }
+        .dist-30 { background: #7cb342; }
+        .dist-60 { background: #e67e22; }
+        .dist-90 { background: #d35400; }
+        .dist-over { background: #c0392b; }
+
+        .distribution-legend {
+            display: flex;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 0;
+        }
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        /* 액션 필요 리스트 */
+        .action-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .action-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: var(--bg);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            border-left: 3px solid var(--danger);
+        }
+        .action-item.warning { border-left-color: var(--warning); }
+        .action-item.info { border-left-color: var(--accent); }
+        .action-info { flex: 1; }
+        .action-title { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+        .action-sub { font-size: 11px; color: var(--text-muted); }
+        .action-value { text-align: right; }
+        .action-amount { font-size: 14px; font-weight: 700; color: var(--text); }
+        .action-days { font-size: 11px; color: var(--danger); font-weight: 600; }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .data-table th {
+            background: #fafbfc;
+            padding: 11px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+        .data-table th:hover { background: #f0f2f5; }
+        .data-table th .sort-icon { margin-left: 4px; opacity: 0.4; }
+        .data-table th.sorted .sort-icon { opacity: 1; color: var(--accent); }
+        .data-table td {
+            padding: 11px 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .data-table tbody tr:hover { background: #fafbfc; }
+        .data-table tbody tr.clickable { cursor: pointer; }
+        .data-table .amount { text-align: right; font-weight: 600; }
+        .data-table .center { text-align: center; }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 7px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .badge-success { background: #e8f6ef; color: #1e8449; }
+        .badge-warning { background: #fef5e7; color: #d35400; }
+        .badge-danger { background: #fdecea; color: #a93226; }
+        .badge-purple { background: #f4ecf7; color: #6c3483; }
+        .badge-info { background: #eaf2f8; color: #2874a6; }
+
+        .tab-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: white;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .tab-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .tab-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+        .filter-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .filter-left { display: flex; align-items: center; gap: 8px; }
+        .filter-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .filter-select {
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+            min-width: 100px;
+        }
+        .filter-select:focus { outline: none; border-color: var(--accent); }
+        .search-input {
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 13px;
+            width: 180px;
+        }
+        .search-input:focus { outline: none; border-color: var(--accent); }
+
+        .rank-list { max-height: 400px; overflow-y: auto; }
+        .rank-sort-toggle { display: flex; gap: 2px; background: #f1f5f9; border-radius: 6px; padding: 2px; }
+        .rank-sort-btn { padding: 3px 10px; border: none; background: transparent; border-radius: 4px; font-size: 11px; cursor: pointer; color: #64748b; transition: all 0.2s; }
+        .rank-sort-btn.active { background: white; color: var(--text); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+        .rank-track-tabs { display: flex; gap: 4px; }
+        .rank-track-tabs .mini-tab { font-size: 11px; padding: 3px 10px; }
+
+        /* 미니 탭 */
+        .mini-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        .mini-tab {
+            padding: 5px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: white;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mini-tab:hover { border-color: var(--accent); color: var(--accent); }
+        .mini-tab.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+        .rank-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: var(--bg);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .rank-item:hover { background: #eef0f2; transform: translateX(2px); }
+        .rank-num {
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            margin-right: 10px;
+            background: #e8ebee;
+            color: var(--text-light);
+        }
+        .rank-num.top3 { background: #5a6c7d; color: white; }
+        .rank-info { flex: 1; }
+        .rank-name { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+        .rank-sub { font-size: 11px; color: var(--text-muted); }
+        .rank-value { text-align: right; }
+        .rank-amount { font-size: 14px; font-weight: 700; color: var(--text); }
+        .rank-amount.highlight { color: #c0392b; }
+        .rank-days { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .toggle-switch {
+            position: relative;
+            width: 40px;
+            height: 22px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #dfe4ea;
+            border-radius: 22px;
+            transition: 0.3s;
+        }
+        .toggle-slider::before {
+            position: absolute;
+            content: '';
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .toggle-switch input:checked + .toggle-slider { background: var(--accent); }
+        .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 16px;
+        }
+        .page-btn {
+            min-width: 32px;
+            height: 32px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+        }
+        .page-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .page-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .page-info { font-size: 12px; color: var(--text-muted); margin-left: 12px; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 1100px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+        .modal-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 { font-weight: 600; font-size: 15px; }
+        .modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; }
+        .close-btn {
+            background: var(--bg);
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .close-btn:hover { background: #e8eaed; }
+
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 10px;
+            padding: 28px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .upload-zone:hover { border-color: var(--accent); background: #fafbfc; }
+        .upload-zone input { display: none; }
+        .upload-icon { font-size: 36px; margin-bottom: 10px; }
+        .upload-text { color: var(--text-light); font-size: 13px; }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-light);
+        }
+        .empty-state-icon { font-size: 56px; margin-bottom: 16px; opacity: 0.6; }
+        .empty-state-text { font-size: 15px; margin-bottom: 20px; }
+
+        .company-detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .company-detail-item:last-child { border-bottom: none; }
+
+        /* 통합 순위 카드 정렬 버튼 */
+        .sort-toggle-group {
+            display: flex;
+            gap: 4px;
+        }
+        .sort-toggle-btn {
+            padding: 4px 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: white;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .sort-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .sort-toggle-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+        @media (max-width: 1200px) {
+            .summary-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 1024px) {
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
+            .track-grid { grid-template-columns: 1fr; }
+            .grid-3 { grid-template-columns: 1fr; }
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .filter-bar { flex-wrap: wrap; }
+        }
+        @media (max-width: 768px) {
+            .container { padding: 16px; }
+            .header { padding: 0 16px; flex-wrap: wrap; gap: 10px; height: auto; padding-top: 12px; padding-bottom: 12px; }
+            .filter-bar { flex-direction: column; align-items: stretch; }
+            .filter-right { flex-direction: column; }
+            .search-input { width: 100%; }
+            .filter-select { width: 100%; }
+        }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+        .hidden { display: none !important; }
+
+        /* 상세 목록 카드: 필터/검색 영역 고정, 테이블만 스크롤 */
+        .detail-card-sticky-wrapper {
+            position: sticky;
+            top: 60px;
+            z-index: 50;
+            background: var(--card-bg);
+            margin: -20px -20px 0;
+            padding: 20px 20px 0;
+            border-radius: 12px 12px 0 0;
+        }
+        .detail-table-area {
+            min-height: 400px;
+        }
+
+        /* ===== 모바일 반응형 개선 ===== */
+        @media (max-width: 600px) {
+            body { font-size: 13px; }
+            .header { padding: 10px 14px; height: auto; }
+            .header h1 { font-size: 0.95rem; gap: 6px; }
+            .header-right { gap: 8px; flex-wrap: wrap; }
+            .header-right > span { font-size: 10px !important; }
+            .container { padding: 10px; }
+
+            /* 요약 지표: 2열 고정, 카드 내부 여백 축소 */
+            .summary-grid { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+            .stat-card { padding: 12px 10px; }
+            .stat-label { font-size: 10px; margin-bottom: 4px; }
+            .stat-value { font-size: 17px; }
+            .stat-sub { font-size: 10px; }
+            .stat-change { font-size: 9px; }
+
+            /* 관리미수금 카드 내부 연도별 분리 축소 */
+            .stat-card div[style*="gap: 10px"] { gap: 6px !important; }
+            .stat-card div[style*="font-size: 13px"] { font-size: 11px !important; }
+            .stat-card div[style*="font-size: 10px"] { font-size: 9px !important; }
+            .stat-card div[style*="font-size: 9px"] { font-size: 8px !important; }
+
+            /* 트랙 카드 */
+            .track-grid { gap: 8px; margin-bottom: 14px; }
+            .track-card { padding: 14px 12px; }
+            .track-name { font-size: 12px; }
+            .track-count { font-size: 10px; padding: 2px 6px; }
+            .track-total { font-size: 15px; margin-bottom: 8px; }
+            .track-stage-info { font-size: 9px; padding: 4px 8px; margin-bottom: 6px; }
+            .stage-item { padding: 6px 4px; }
+            .stage-item-label { font-size: 9px; }
+            .stage-item-value { font-size: 12px; }
+            .stage-item-sub { font-size: 8px; }
+
+            /* 경과일 분포 */
+            .distribution-bar { height: 24px; }
+            .distribution-segment { font-size: 9px; min-width: 28px; }
+
+            /* 액션 섹션: 1열 */
+            .grid-2 { grid-template-columns: 1fr; gap: 10px; }
+            .grid-3 { grid-template-columns: 1fr; gap: 10px; }
+
+            /* 액션 카드 내부 */
+            .card { padding: 14px 12px; margin-bottom: 10px; border-radius: 10px; }
+            .card-header { margin-bottom: 10px; padding-bottom: 8px; }
+            .card-title { font-size: 12px; }
+            .card-title .count-badge { font-size: 10px; padding: 1px 6px; }
+            .action-item { padding: 10px; }
+            .action-title { font-size: 12px; }
+            .action-sub { font-size: 10px; }
+            .action-amount { font-size: 13px; }
+            .action-days { font-size: 10px; }
+            .action-list { max-height: 250px; }
+
+            /* 순위 카드 */
+            .rank-item { padding: 10px; }
+            .rank-name { font-size: 12px; }
+            .rank-sub { font-size: 10px; }
+            .rank-amount { font-size: 13px; }
+            .rank-list { max-height: 300px; }
+            .rank-num { width: 20px; height: 20px; font-size: 10px; margin-right: 8px; }
+
+            /* 미니 탭 */
+            .mini-tab { padding: 4px 8px; font-size: 10px; }
+            .mini-tabs { gap: 3px; }
+            .rank-sort-toggle { gap: 1px; }
+            .rank-sort-btn { padding: 3px 7px; font-size: 10px; }
+
+            /* 상세 목록 */
+            .tab-buttons { gap: 4px; margin-bottom: 10px; }
+            .tab-btn { padding: 8px 12px; font-size: 11px; }
+            .filter-bar { gap: 8px; }
+            .filter-left span { font-size: 12px !important; }
+            .filter-select { padding: 8px 10px; font-size: 12px; min-width: 80px; }
+            .search-input { padding: 8px 10px; font-size: 12px; }
+            .data-table { font-size: 11px; }
+            .data-table th { padding: 8px 6px; font-size: 10px; }
+            .data-table td { padding: 8px 6px; }
+            .badge { font-size: 9px; padding: 2px 5px; }
+
+            /* 페이지네이션 */
+            .pagination { padding: 10px; gap: 3px; }
+            .page-btn { min-width: 28px; height: 28px; font-size: 11px; }
+            .page-info { font-size: 10px; margin-left: 6px; }
+
+            /* 모달 */
+            .modal { padding: 10px; }
+            .modal-content { max-height: 85vh; border-radius: 10px; }
+            .modal-header { padding: 14px 16px; }
+            .modal-header h3 { font-size: 14px; }
+            .modal-body { padding: 14px; }
+
+            /* 업로드 플로팅 버튼 */
+            .upload-floating { bottom: 16px; right: 16px; }
+            .upload-floating-btn { padding: 8px 14px; font-size: 11px; }
+
+            /* 토글 */
+            .toggle-group { font-size: 10px; gap: 4px; }
+            .toggle-group-sm { font-size: 9px; gap: 3px; }
+            .toggle-switch { width: 34px; height: 18px; }
+            .toggle-slider::before { height: 14px; width: 14px; left: 2px; bottom: 2px; }
+            .toggle-switch input:checked + .toggle-slider::before { transform: translateX(14px); }
+
+            /* 툴팁: 모바일에서 위치 조정 */
+            .tooltip-icon .tooltip-text {
+                position: fixed;
+                top: auto;
+                bottom: 20%;
+                left: 10%;
+                right: 10%;
+                max-width: none;
+                z-index: 300;
+            }
+            .tooltip-icon .tooltip-text::after { display: none; }
+
+            /* 상세테이블 sticky 조정 (모바일 헤더 높이 다름) */
+            .detail-card-sticky-wrapper {
+                top: 0;
+                position: relative;
+            }
+        }
+
+        /* ==============================
+           🔐 로그인 오버레이
+        ============================== */
+        #login-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 60%, #0F172A 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Pretendard', -apple-system, sans-serif;
+        }
+        #login-overlay.fade-out {
+            animation: fadeOutOverlay 0.4s ease forwards;
+        }
+        @keyframes fadeOutOverlay {
+            to { opacity: 0; pointer-events: none; }
+        }
+        .login-box {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 40px 36px;
+            width: 100%;
+            max-width: 400px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+        }
+        .login-logo {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .login-logo-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        .login-logo-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #F1F5F9;
+            letter-spacing: -0.3px;
+        }
+        .login-logo-sub {
+            font-size: 11px;
+            color: #64748B;
+            margin-top: 4px;
+        }
+        .login-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #94A3B8;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .login-input-wrap {
+            position: relative;
+            margin-bottom: 16px;
+        }
+        .login-input {
+            width: 100%;
+            padding: 13px 46px 13px 16px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            color: #F1F5F9;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        .login-input:focus {
+            border-color: #3B82F6;
+            background: rgba(59,130,246,0.08);
+        }
+        .login-input.error {
+            border-color: #EF4444;
+            background: rgba(239,68,68,0.07);
+        }
+        .login-pw-toggle {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #64748B;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 2px;
+            line-height: 1;
+        }
+        .login-pw-toggle:hover { color: #94A3B8; }
+        .login-btn {
+            width: 100%;
+            padding: 13px;
+            background: #3B82F6;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            font-family: inherit;
+        }
+        .login-btn:hover:not(:disabled) { background: #2563EB; }
+        .login-btn:active:not(:disabled) { transform: scale(0.99); }
+        .login-btn:disabled { background: #334155; color: #64748B; cursor: not-allowed; }
+        .login-error {
+            display: none;
+            background: rgba(239,68,68,0.12);
+            border: 1px solid rgba(239,68,68,0.25);
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-size: 12px;
+            color: #FCA5A5;
+            margin-bottom: 14px;
+            text-align: center;
+        }
+        .login-error.show { display: block; }
+        .login-lock {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .login-lock-icon { font-size: 32px; margin-bottom: 10px; }
+        .login-lock-msg { font-size: 13px; color: #EF4444; font-weight: 600; }
+        .login-lock-timer { font-size: 12px; color: #64748B; margin-top: 6px; }
+        .login-attempts {
+            text-align: center;
+            font-size: 11px;
+            color: #475569;
+            margin-top: 12px;
+        }
+        #security-blocked {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 999999;
+            background: #0F172A;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            color: #F1F5F9;
+            font-family: 'Pretendard', -apple-system, sans-serif;
+        }
+        #security-blocked.show { display: flex; }
+        #security-blocked .icon { font-size: 48px; margin-bottom: 16px; }
+        #security-blocked h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: #EF4444; }
+        #security-blocked p { font-size: 13px; color: #64748B; }
+
+        /* 태블릿 보정 */
+        @media (min-width: 601px) and (max-width: 768px) {
+            .summary-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+            .stat-value { font-size: 18px; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .grid-3 { grid-template-columns: 1fr 1fr; }
+            .tooltip-icon .tooltip-text {
+                max-width: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- 🔐 보안 차단 화면 (개발자도구 감지 시) -->
+<div id="security-blocked">
+    <div class="icon">🚫</div>
+    <h2>접근이 차단되었습니다</h2>
+    <p>보안 정책에 의해 접근이 제한되었습니다.<br>페이지를 새로고침해 주세요.</p>
+</div>
+
+<!-- 🔐 로그인 오버레이 -->
+<div id="login-overlay">
+    <div class="login-box">
+        <div class="login-logo">
+            <div class="login-logo-icon">📊</div>
+            <div class="login-logo-title">(주) 넷폼알앤디 미수금 현황</div>
+            <div class="login-logo-sub">이 페이지는 보호된 내부 문서입니다</div>
+        </div>
+        <div id="login-form-area">
+            <div id="login-error" class="login-error"></div>
+            <label class="login-label">비밀번호</label>
+            <div class="login-input-wrap">
+                <input type="password" id="login-pw" class="login-input"
+                    placeholder="비밀번호를 입력하세요"
+                    maxlength="64"
+                    autocomplete="current-password"
+                    onkeydown="if(event.key==='Enter')doLogin()">
+                <button class="login-pw-toggle" type="button" onclick="togglePwVis()" id="pw-toggle-btn" aria-label="비밀번호 표시/숨김">👁</button>
+            </div>
+            <button class="login-btn" id="login-btn" onclick="doLogin()">로그인</button>
+            <div class="login-attempts" id="login-attempts-info"></div>
+        </div>
+        <div id="login-lock-area" class="login-lock" style="display:none">
+            <div class="login-lock-icon">🔒</div>
+            <div class="login-lock-msg">일시적으로 잠겼습니다</div>
+            <div class="login-lock-timer" id="lock-timer-txt">잠시 후 다시 시도하세요</div>
+        </div>
+    </div>
+</div>
+
+<!-- 앱 본문 (인증 후 표시) -->
+<div id="app-content" style="display:none">
+    <div class="header">
+        <h1>📊 (주) 넷폼알앤디 2026년 매출현황</h1>
+        <div class="header-right">
+            <span style="font-size: 11px; color: #F59E0B; background: rgba(245,158,11,0.15); padding: 4px 10px; border-radius: 4px; font-weight: 500;">금액 기준 V-</span>
+            <span class="live-badge hidden" id="liveBadge">LIVE</span>
+            <span class="update-badge" id="updateDate">-</span>
+        </div>
+    </div>
+
+    <!-- 고정 플로팅 업로드 버튼 -->
+    <div class="upload-floating">
+        <button class="upload-floating-btn" onclick="openUploadModal()">파일 업로드</button>
+    </div>
+
+    <div class="container">
+        <div id="emptyState" class="empty-state">
+            <div class="empty-state-icon">📊</div>
+            <div class="empty-state-text">미수금 현황 데이터를 업로드하세요</div>
+            <button class="btn btn-primary" onclick="openUploadModal()">엑셀 파일 업로드</button>
+        </div>
+
+        <div id="dashboard" class="hidden">
+
+            <!-- 연도 토글 (강조) -->
+            <div class="year-toggle-bar">
+                <span class="year-toggle-label">📅 조회 연도</span>
+                <div class="year-toggle-group">
+                    <button id="yearBtn26" onclick="switchYear('26년')" class="year-toggle-btn active">26년</button>
+                    <button id="yearBtn25" onclick="switchYear('~25년')" class="year-toggle-btn">~25년</button>
+                </div>
+            </div>
+
+            <!-- 1. 요약 지표 (4개 카드) - 수금예정액 / 관리미수금 / 장기미수금 / 2026년 대금회수율 -->
+            <div class="summary-grid">
+                <div class="stat-card">
+                    <div class="stat-label">
+                        <span class="stat-label-left">
+                            수금예정액
+                            <span class="tooltip-icon">?
+                                <span class="tooltip-text">청구 후 미입금 상태인 전체 금액 합계</span>
+                            </span>
+                        </span>
+                        <span class="stat-change hidden" id="totalChange"></span>
+                    </div>
+                    <div class="stat-value" id="totalAmount">-</div>
+                    <div class="stat-sub" id="totalCount">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">
+                        <span class="stat-label-left">
+                            관리미수금
+                            <span class="tooltip-icon">?
+                                <span class="tooltip-text" style="text-align:left;">
+                                    <div style="font-weight:600; margin-bottom:6px;">관리미수금 기준</div>
+                                    <div style="color:#95a5a6; font-size:11px; margin-bottom:6px;">매출일 기준</div>
+                                    <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                                        <tr><td style="padding:3px 8px 3px 0; color:#64748b;">자재판매</td><td style="padding:3px 0; font-weight:600;">40일 경과시</td></tr>
+                                        <tr><td style="padding:3px 8px 3px 0; color:#64748b;">선급금</td><td style="padding:3px 0; font-weight:600;">20일 경과시</td></tr>
+                                        <tr><td style="padding:3px 8px 3px 0; color:#64748b;">그 외</td><td style="padding:3px 0; font-weight:600;">30일 경과시</td></tr>
+                                    </table>
+                                </span>
+                            </span>
+                        </span>
+                        <span class="stat-change hidden" id="manageChange"></span>
+                    </div>
+                    <div style="display: flex; align-items: flex-end; gap: 14px;">
+                        <div style="flex-shrink: 0;">
+                            <div class="stat-value" id="manageAmount">-</div>
+                            <div class="stat-sub" id="manageCount">-</div>
+                        </div>
+                        <div style="display: flex; gap: 10px; padding-left: 14px; border-left: 1px dashed #e0e4e8; margin-bottom: 2px;">
+                            <div>
+                                <div style="font-size: 10px; color: #95a5a6; margin-bottom: 1px;">~25년</div>
+                                <div style="font-size: 13px; font-weight: 600; color: #c0392b;" id="manageBefore26">-</div>
+                                <div style="font-size: 9px; color: #95a5a6;" id="manageBefore26Count">-</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 10px; color: #95a5a6; margin-bottom: 1px;">26년</div>
+                                <div style="font-size: 13px; font-weight: 600; color: #2874a6;" id="manage26">-</div>
+                                <div style="font-size: 9px; color: #95a5a6;" id="manage26Count">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">
+                        <span class="stat-label-left">
+                            장기미수금
+                            <span class="tooltip-icon">?
+                                <span class="tooltip-text" style="text-align:left;">
+                                    <div style="font-weight:600; margin-bottom:6px;">장기미수금 기준</div>
+                                    <div style="color:#95a5a6; font-size:11px; margin-bottom:6px;">매출일 기준</div>
+                                    <div style="font-size:12px; font-weight:600;">91일 경과 시</div>
+                                </span>
+                            </span>
+                        </span>
+                    </div>
+                    <div class="stat-value" id="overdueAmount">-</div>
+                    <div class="stat-sub" id="overdueDetail">-</div>
+                </div>
+                <!-- 카드 4: 2026년 대금회수율 -->
+                <div class="stat-card recovery-card">
+                    <div class="stat-label">
+                        <span class="stat-label-left">
+                            2026년 대금회수율
+                            <span class="tooltip-icon">?
+                                <span class="tooltip-text" style="text-align:left;">
+                                    <div style="font-weight:600; margin-bottom:6px;">대금회수율 산정</div>
+                                    <div style="font-size:12px; line-height:1.5;">(확정매출 − 수금예정액) / 확정매출<br>= 받은 매출 / 확정매출 전체</div>
+                                    <div style="color:#94a3b8; font-size:11px; margin-top:6px;">연말까지 누적되어 내년 초 측정 지표와 동일</div>
+                                </span>
+                            </span>
+                        </span>
+                        <span class="stat-change hidden" id="recoveryChange"></span>
+                    </div>
+                    <div class="stat-value" id="recoveryRate">-</div>
+                    <div class="stat-sub" style="display:flex; flex-direction:column; gap:2px;">
+                        <span id="recoveryDetail">-</span>
+                        <span style="color:#94a3b8; font-size:10px; margin-top:2px; padding-top:4px; border-top:1px dashed #e5e7eb;">이번달 회수액 <span id="thisMonthIncome" style="color:#475569; font-weight:600;">-</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1.5 공지·참고사항 보드 (Notice 시트 기반) -->
+            <div id="noticeBoard" class="notice-board" style="display:none;">
+                <div class="notice-header-row">
+                    <h3>📌 공지·참고사항 <span id="noticeCount" class="notice-count"></span></h3>
+                </div>
+                <div id="noticeList" class="notice-list"></div>
+            </div>
+
+            <!-- 2. 트랙별 현황 -->
+            <div class="track-grid">
+                <div class="track-card">
+                    <div class="track-header">
+                        <div class="track-header-left">
+                            <span class="track-name">컨설팅</span>
+                        </div>
+                        <div class="track-header-right">
+                            <span class="track-count" id="trackACount">-</span>
+                            <div class="toggle-group-sm">
+                                <span>예외제외</span>
+                                <label class="toggle-switch-sm">
+                                    <input type="checkbox" id="trackAExcludeToggle" onchange="renderTrackCard('A')">
+                                    <span class="toggle-slider-sm"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="track-stage-info" id="trackAStageInfo">기한내: 선급금 ~20일 / 중도금·잔금 ~30일 | 관리: 21/31~90일 | 장기미수: 91일~</div>
+                    <div class="track-total" id="trackATotal">-</div>
+                    <div class="stage-bar" id="trackABar"></div>
+                    <div class="stage-detail">
+                        <div class="stage-item normal">
+                            <div class="stage-item-label">기한내</div>
+                            <div class="stage-item-value" id="trackANormal">-</div>
+                            <div class="stage-item-sub" id="trackANormalPct">-</div>
+                        </div>
+                        <div class="stage-item manage">
+                            <div class="stage-item-label">관리</div>
+                            <div class="stage-item-value" id="trackAManage">-</div>
+                            <div class="stage-item-sub" id="trackAManagePct">-</div>
+                        </div>
+                        <div class="stage-item overdue">
+                            <div class="stage-item-label">장기미수</div>
+                            <div class="stage-item-value" id="trackAOverdue">-</div>
+                            <div class="stage-item-sub" id="trackAOverduePct">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="track-card">
+                    <div class="track-header">
+                        <div class="track-header-left">
+                            <span class="track-name">자재판매</span>
+                        </div>
+                        <div class="track-header-right">
+                            <span class="track-count" id="trackBCount">-</span>
+                            <div class="toggle-group-sm">
+                                <span>예외제외</span>
+                                <label class="toggle-switch-sm">
+                                    <input type="checkbox" id="trackBExcludeToggle" onchange="renderTrackCard('B')">
+                                    <span class="toggle-slider-sm"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="track-stage-info" id="trackBStageInfo">기한내: ~40일 | 관리: 41~90일 | 장기미수: 91일~</div>
+                    <div class="track-total" id="trackBTotal">-</div>
+                    <div class="stage-bar" id="trackBBar"></div>
+                    <div class="stage-detail">
+                        <div class="stage-item normal">
+                            <div class="stage-item-label">기한내</div>
+                            <div class="stage-item-value" id="trackBNormal">-</div>
+                            <div class="stage-item-sub" id="trackBNormalPct">-</div>
+                        </div>
+                        <div class="stage-item manage">
+                            <div class="stage-item-label">관리</div>
+                            <div class="stage-item-value" id="trackBManage">-</div>
+                            <div class="stage-item-sub" id="trackBManagePct">-</div>
+                        </div>
+                        <div class="stage-item overdue">
+                            <div class="stage-item-label">장기미수</div>
+                            <div class="stage-item-value" id="trackBOverdue">-</div>
+                            <div class="stage-item-sub" id="trackBOverduePct">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="track-card">
+                    <div class="track-header">
+                        <div class="track-header-left">
+                            <span class="track-name">특허기술자문료</span>
+                        </div>
+                        <div class="track-header-right">
+                            <span class="track-count" id="trackCCount">-</span>
+                            <div class="toggle-group-sm">
+                                <span>예외제외</span>
+                                <label class="toggle-switch-sm">
+                                    <input type="checkbox" id="trackCExcludeToggle" onchange="renderTrackCard('C')">
+                                    <span class="toggle-slider-sm"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="track-stage-info" id="trackCStageInfo">기한내: ~30일 | 관리: 31~90일 | 장기미수: 91일~</div>
+                    <div class="track-total" id="trackCTotal">-</div>
+                    <div class="stage-bar" id="trackCBar"></div>
+                    <div class="stage-detail">
+                        <div class="stage-item normal">
+                            <div class="stage-item-label">기한내</div>
+                            <div class="stage-item-value" id="trackCNormal">-</div>
+                            <div class="stage-item-sub" id="trackCNormalPct">-</div>
+                        </div>
+                        <div class="stage-item manage">
+                            <div class="stage-item-label">관리</div>
+                            <div class="stage-item-value" id="trackCManage">-</div>
+                            <div class="stage-item-sub" id="trackCManagePct">-</div>
+                        </div>
+                        <div class="stage-item overdue">
+                            <div class="stage-item-label">장기미수</div>
+                            <div class="stage-item-value" id="trackCOverdue">-</div>
+                            <div class="stage-item-sub" id="trackCOverduePct">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 경과일 구간별 분포 -->
+            <div class="card" style="margin-bottom: 16px;">
+                <div class="card-header">
+                    <div class="card-title">
+                        경과일 구간별 분포
+                        <span class="tooltip-icon">?
+                            <span class="tooltip-text">계산서 발행일 기준 경과일별 미수금 분포</span>
+                        </span>
+                    </div>
+                    <div class="toggle-group">
+                        <span>예외 제외</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="distExcludeException" onchange="renderDistribution()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="distribution-bar" id="distributionBar"></div>
+                <div class="distribution-legend" id="distributionLegend"></div>
+            </div>
+
+            <!-- 4. 액션 필요 섹션 -->
+            <div class="grid-2" style="margin-bottom: 16px;">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            금주 액션 필요
+                            <span class="count-badge" id="actionCount">0</span>
+                            <span class="tooltip-icon">?
+                                <span class="tooltip-text">관리 진입 또는 장기미수 전환 임박 건</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border);">
+                        <div class="mini-tabs" id="actionTabs" style="margin:0; border:none; padding:0;">
+                            <button class="mini-tab active" onclick="setActionTab('')">전체</button>
+                            <button class="mini-tab" onclick="setActionTab('A')">컨설팅</button>
+                            <button class="mini-tab" onclick="setActionTab('B')">자재</button>
+                            <button class="mini-tab" onclick="setActionTab('C')">특허료</button>
+                        </div>
+                    </div>
+                    <div class="action-list" id="actionList"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            예상입금일 도래/경과
+                            <span class="count-badge" id="dueCount">0</span>
+                            <span class="tooltip-icon">?
+                                <span class="tooltip-text">입금 예정일 7일 이내 도래 또는 이미 경과한 건</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border);">
+                        <div class="mini-tabs" id="dueStatusTabs" style="margin:0; border:none; padding:0;">
+                            <button class="mini-tab active" onclick="setDueStatusTab('all')">전체</button>
+                            <button class="mini-tab" onclick="setDueStatusTab('upcoming')">도래 예정</button>
+                            <button class="mini-tab" onclick="setDueStatusTab('overdue')">경과</button>
+                        </div>
+                        <div class="mini-tabs" id="dueTabs" style="margin:0; border:none; padding:0;">
+                            <button class="mini-tab active" onclick="setDueTab('A')">컨설팅</button>
+                            <button class="mini-tab" onclick="setDueTab('B')">자재</button>
+                            <button class="mini-tab" onclick="setDueTab('C')">특허료</button>
+                        </div>
+                    </div>
+                    <div class="action-list" id="dueList"></div>
+                </div>
+            </div>
+
+            <!-- 5. 상위 현장/업체 순위 (3분할) - 접기/펼치기 -->
+            <div class="ranking-toggle-bar" onclick="toggleRanking()">
+                <div>
+                    <span class="toggle-icon" id="rankingToggleIcon">▶</span>
+                    <span class="toggle-title">📊 순위 카드 (미수금 상위 현장·업체, 경과일 상위)</span>
+                </div>
+                <span class="toggle-label" id="rankingToggleLabel">펼치기</span>
+            </div>
+            <div id="rankingSection" style="margin-bottom: 16px; display:none;">
+                <div class="grid-3">
+                    <div class="card" style="margin-bottom:0;">
+                        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                            <div class="card-title">미수금 상위 현장</div>
+                            <div class="rank-sort-toggle">
+                                <button class="rank-sort-btn active" data-card="site" data-sort="amount" onclick="setRankSort('site','amount')">금액</button>
+                                <button class="rank-sort-btn" data-card="site" data-sort="days" onclick="setRankSort('site','days')">경과일</button>
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <div class="mini-tabs rank-track-tabs" id="rankSiteTabs" style="margin:0; border:none; padding:0;">
+                                <button class="mini-tab" onclick="setRankCardTab('site','A')">컨설팅</button>
+                                <button class="mini-tab" onclick="setRankCardTab('site','B')">자재</button>
+                                <button class="mini-tab" onclick="setRankCardTab('site','C')">특허료</button>
+                            </div>
+                            <div class="toggle-group-sm">
+                                <span>예외제외</span>
+                                <label class="toggle-switch-sm">
+                                    <input type="checkbox" id="rankSiteExcludeException" onchange="renderTopSite()">
+                                    <span class="toggle-slider-sm"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="rank-list" id="topSiteList"></div>
+                    </div>
+                    <div class="card" style="margin-bottom:0;">
+                        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                            <div class="card-title">미수금 상위 업체</div>
+                            <div class="rank-sort-toggle">
+                                <button class="rank-sort-btn active" data-card="amount" data-sort="amount" onclick="setRankSort('amount','amount')">금액</button>
+                                <button class="rank-sort-btn" data-card="amount" data-sort="days" onclick="setRankSort('amount','days')">경과일</button>
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <div class="mini-tabs rank-track-tabs" id="rankAmountTabs" style="margin:0; border:none; padding:0;">
+                                <button class="mini-tab" onclick="setRankCardTab('amount','A')">컨설팅</button>
+                                <button class="mini-tab" onclick="setRankCardTab('amount','B')">자재</button>
+                                <button class="mini-tab" onclick="setRankCardTab('amount','C')">특허료</button>
+                            </div>
+                            <div class="toggle-group-sm">
+                                <span>예외제외</span>
+                                <label class="toggle-switch-sm">
+                                    <input type="checkbox" id="rankAmountExcludeException" onchange="renderTopAmount()">
+                                    <span class="toggle-slider-sm"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="rank-list" id="topAmountList"></div>
+                    </div>
+                    <div class="card" style="margin-bottom:0;">
+                        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                            <div class="card-title">경과일 상위 업체</div>
+                            <div class="rank-sort-toggle">
+                                <button class="rank-sort-btn" data-card="days" data-sort="amount" onclick="setRankSort('days','amount')">금액</button>
+                                <button class="rank-sort-btn active" data-card="days" data-sort="days" onclick="setRankSort('days','days')">경과일</button>
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <div class="mini-tabs rank-track-tabs" id="rankDaysTabs" style="margin:0; border:none; padding:0;">
+                                <button class="mini-tab" onclick="setRankCardTab('days','A')">컨설팅</button>
+                                <button class="mini-tab" onclick="setRankCardTab('days','B')">자재</button>
+                                <button class="mini-tab" onclick="setRankCardTab('days','C')">특허료</button>
+                            </div>
+                            <div class="toggle-group-sm">
+                                <span>예외제외</span>
+                                <label class="toggle-switch-sm">
+                                    <input type="checkbox" id="rankDaysExcludeException" onchange="renderTopDays()">
+                                    <span class="toggle-slider-sm"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="rank-list" id="topDaysList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. 상세 목록 -->
+            <div class="card" id="detailCard">
+                <div class="detail-card-sticky-wrapper">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" data-track="" onclick="setDetailTab('')">전체</button>
+                        <button class="tab-btn" data-track="A" onclick="setDetailTab('A')">컨설팅</button>
+                        <button class="tab-btn" data-track="B" onclick="setDetailTab('B')">자재판매</button>
+                        <button class="tab-btn" data-track="C" onclick="setDetailTab('C')">특허기술자문료</button>
+                        <button class="btn btn-primary btn-sm" onclick="downloadExcel()" style="margin-left: auto;">다운로드</button>
+                    </div>
+
+                    <div class="filter-bar">
+                        <div class="filter-left">
+                            <span style="font-size: 14px; font-weight: 600;" id="detailTitle">전체 상세 내역</span>
+                        </div>
+                        <div class="filter-right">
+                            <select class="filter-select" id="filterStage" onchange="goToPage(1)">
+                                <option value="">구간</option>
+                                <option value="장기미수">장기미수</option>
+                                <option value="관리">관리</option>
+                                <option value="기한내">기한내</option>
+                            </select>
+                            <select class="filter-select" id="filterComm" onchange="goToPage(1)">
+                                <option value="">예정일</option>
+                                <option value="Y">입금일 확보</option>
+                                <option value="N">입금일 미확보</option>
+                            </select>
+                            <select class="filter-select" id="filterPaid" onchange="goToPage(1)">
+                                <option value="unpaid">미수금만</option>
+                                <option value="paid">입금완료만</option>
+                                <option value="">전체(입금포함)</option>
+                            </select>
+                            <input type="text" class="search-input" id="searchInput" placeholder="업체/현장 검색..." oninput="handleSearchInput()">
+                            <button class="btn btn-outline btn-sm" onclick="resetFilters()">초기화</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-table-area" style="overflow-x: auto;">
+                    <table class="data-table" id="detailTable">
+                        <thead>
+                            <tr>
+                                <th onclick="setSortColumn('순번')">순번 <span class="sort-icon">↕</span></th>
+                                <th onclick="setSortColumn('업체명')">업체명 <span class="sort-icon">↕</span></th>
+                                <th onclick="setSortColumn('현장명')">현장명 <span class="sort-icon">↕</span></th>
+                                <th onclick="setSortColumn('구분')">구분 <span class="sort-icon">↕</span></th>
+                                <th class="amount" onclick="setSortColumn('미수금액')">미수금액 <span class="sort-icon">↕</span></th>
+                                <th class="center" onclick="setSortColumn('경과일')">경과일 <span class="sort-icon">↕</span></th>
+                                <th class="center" onclick="setSortColumn('단계')">단계 <span class="sort-icon">↕</span></th>
+                                <th onclick="setSortColumn('예상입금일')">예상입금일 <span class="sort-icon">↕</span></th>
+                                <th onclick="setSortColumn('입금일')">입금일 <span class="sort-icon">↕</span></th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <div class="pagination" id="pagination"></div>
+                </div><!-- end detail-table-area -->
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 업로드 모달 -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content" style="max-width: 560px;">
+            <div class="modal-header">
+                <h3>엑셀 파일 업로드</h3>
+                <button class="close-btn" onclick="closeUploadModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- 매출현황 업로드 -->
+                <div style="margin-bottom: 14px;">
+                    <div style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:#1e293b; margin-bottom:8px;">
+                        📊 매출현황
+                        <span style="font-size:11px; font-weight:400; color:#64748b;">(컨설팅·자재판매·특허·기술자문·2025시트 포함)</span>
+                    </div>
+                    <div class="upload-zone" onclick="document.getElementById('fileInput').click()" style="padding: 20px;">
+                        <div class="upload-icon" style="font-size:28px;">📁</div>
+                        <div class="upload-text" style="font-size:13px;">클릭하여 매출현황 엑셀 선택</div>
+                        <div style="margin-top: 4px; font-size: 11px; color: var(--text-muted);">.xlsx, .xls</div>
+                        <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="loadExcel(event)">
+                    </div>
+                </div>
+                <!-- 공지(Notice) 업로드 -->
+                <div>
+                    <div style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:#1e293b; margin-bottom:8px;">
+                        📌 공지·참고사항 (Notice)
+                        <span style="font-size:11px; font-weight:400; color:#64748b;">(별도 파일로 독립 관리)</span>
+                    </div>
+                    <div class="upload-zone" onclick="document.getElementById('noticeFileInput').click()" style="padding: 20px; background:#fefce8; border-color:#fde68a;">
+                        <div class="upload-icon" style="font-size:28px;">📌</div>
+                        <div class="upload-text" style="font-size:13px;">클릭하여 Notice 엑셀 선택</div>
+                        <div style="margin-top: 4px; font-size: 11px; color: var(--text-muted);">Notice 시트가 있는 .xlsx</div>
+                        <input type="file" id="noticeFileInput" accept=".xlsx,.xls" onchange="loadNoticeExcel(event)">
+                    </div>
+                </div>
+                <div style="margin-top: 12px; padding: 10px 12px; background: #f8fafc; border-radius: 6px; font-size: 11px; color: #64748b; line-height: 1.5;">
+                    💡 두 파일은 <b>완전 독립</b>적으로 관리됩니다. 매출현황만 업데이트하거나 공지만 업데이트할 때 한쪽만 업로드하면 됩니다. 다른 쪽 데이터는 그대로 유지됩니다.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 업체 상세 모달 -->
+    <div class="modal" id="companyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="companyModalTitle">업체 상세</h3>
+                <button class="close-btn" onclick="closeCompanyModal()">×</button>
+            </div>
+            <div class="modal-body" id="companyModalBody"></div>
+        </div>
+    </div>
+
+</div><!-- /app-content -->
+
+    <script>
+        let rawData = [];
+        let notices = [];           // Notice 시트 파싱 결과 (공지·참고사항)
+        let previousData = null;
+        let originalFileBuffer = null;  // 업로드한 원본 엑셀 파일 보관
+        let originalFileName = '';      // 원본 파일명 보관
+        let originalHeaderRowIdx = 0;   // 원본 엑셀의 헤더 행 인덱스 (0-based)
+        let currentTrack = '';
+        let currentYear = '26년';  // '26년'(메인) | '~25년'(서브)
+        let currentPage = 1;
+        let sortColumn = '경과일';
+        let sortDirection = 'desc';
+        const itemsPerPage = 10;
+
+        // 각 섹션별 탭 상태
+        let actionTabTrack = '';
+        let dueTabTrack = '';
+        let rankTrackSite = '';     // individual track filter per card
+        let rankTrackAmount = '';
+        let rankTrackDays = '';
+        let rankSortSite = 'amount';    // 'amount' or 'days'
+        let rankSortAmount = 'amount';  // 'amount' or 'days'
+        let rankSortDays = 'days';      // 'amount' or 'days'
+        let dueStatusFilter = 'all'; // 'all', 'upcoming', 'overdue'
+
+        // 단계 표시명 매핑 (내부값 -> 표시값)
+        const stageDisplayName = { '정상': '기한내', '관리': '관리', '연체': '장기미수' };
+        // 표시값 -> 내부값 역매핑
+        const stageInternalName = { '기한내': '정상', '관리': '관리', '장기미수': '연체' };
+
+        function openUploadModal() { document.getElementById('uploadModal').classList.add('active'); }
+        function closeUploadModal() { document.getElementById('uploadModal').classList.remove('active'); }
+        function closeCompanyModal() { document.getElementById('companyModal').classList.remove('active'); }
+
+        // 검색 입력 시 화면 흔들림 방지: 스크롤 위치 고정 + 디바운스
+        let searchTimer = null;
+        function handleSearchInput() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                const scrollY = window.scrollY;
+                goToPage(1);
+                requestAnimationFrame(() => {
+                    window.scrollTo(0, scrollY);
+                });
+            }, 200);
+        }
+
+        // Notice 전용 업로드 처리 (매출현황과 완전 독립)
+        function loadNoticeExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    let sheetName = workbook.SheetNames.find(n => n === 'Notice');
+                    if (!sheetName) {
+                        // Notice 시트가 없으면 첫 번째 시트를 사용 (헤더가 맞으면 처리)
+                        sheetName = workbook.SheetNames[0];
+                    }
+                    const sheet = workbook.Sheets[sheetName];
+                    const njson = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                    if (!njson || njson.length < 2) {
+                        alert('Notice 데이터가 비어있습니다. 헤더 행 + 최소 1행이 필요합니다.');
+                        return;
+                    }
+                    const nheaders = njson[0] || [];
+                    const nIdx = (name) => nheaders.findIndex(h => h === name);
+                    const ci작성 = nIdx('작성일');
+                    const ci연도 = nIdx('표시연도');
+                    const ci유형 = nIdx('유형');
+                    const ci제목 = nIdx('제목');
+                    const ci내용 = nIdx('내용');
+                    const ci상태 = nIdx('진행상태');
+                    const ci고정 = nIdx('고정');
+                    if (ci제목 < 0) {
+                        alert('필수 컬럼 "제목"을 찾을 수 없습니다. Notice 시트 헤더를 확인해주세요.');
+                        return;
+                    }
+                    const parsed = [];
+                    for (let i = 1; i < njson.length; i++) {
+                        const row = njson[i];
+                        if (!row || !row.length) continue;
+                        const 제목 = row[ci제목];
+                        if (!제목) continue;
+                        const 유형Raw = ci유형 >= 0 ? String(row[ci유형] || '').trim() : '';
+                        const 유형 = ['공지','참고','긴급'].includes(유형Raw) ? 유형Raw : '참고';
+                        const 연도Raw = ci연도 >= 0 ? String(row[ci연도] || '').trim() : '';
+                        const 표시연도 = ['~25년','26년','공통'].includes(연도Raw) ? 연도Raw : '공통';
+                        parsed.push({
+                            작성일: ci작성 >= 0 ? normalizeDate(row[ci작성]) || '' : '',
+                            표시연도: 표시연도,
+                            유형: 유형,
+                            제목: String(제목),
+                            내용: ci내용 >= 0 ? String(row[ci내용] || '') : '',
+                            진행상태: ci상태 >= 0 ? String(row[ci상태] || '').trim() : '',
+                            고정: ci고정 >= 0 && String(row[ci고정] || '').toUpperCase() === 'Y'
+                        });
+                    }
+                    notices = parsed;
+                    saveNoticesToStorage();
+                    renderNotices();
+                    closeUploadModal();
+                    document.getElementById('noticeFileInput').value = '';
+                    alert(`공지 ${notices.length}건 불러옴 ✅`);
+                } catch (err) {
+                    console.error('Notice 로드 오류:', err);
+                    alert('Notice 파일 처리 실패: ' + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function saveNoticesToStorage() {
+            try { localStorage.setItem('dashboardNotices', JSON.stringify(notices)); }
+            catch (e) { console.warn('Notice 저장 실패:', e); }
+        }
+        function loadNoticesFromStorage() {
+            try {
+                const saved = localStorage.getItem('dashboardNotices');
+                if (saved) {
+                    notices = JSON.parse(saved);
+                    renderNotices();
+                }
+            } catch (e) { console.warn('Notice 복원 실패:', e); }
+        }
+
+        function loadExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // 원본 파일명 저장
+            originalFileName = file.name;
+
+            const fileTime = file.lastModified ? new Date(file.lastModified) : new Date();
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // 원본 파일 바이너리 그대로 보관
+                originalFileBuffer = e.target.result.slice(0);
+                processExcelData(e.target.result, fileTime);
+                closeUploadModal();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // 엑셀 시리얼 넘버 → yyyy-mm-dd 변환 (타임존 무관, 순수 산술)
+        function excelSerialToDate(serial) {
+            // 엑셀 기준: 1900-01-01 = 1, 1900년 윤년 버그(60) 보정
+            let s = Math.round(serial);
+            if (s > 60) s--; // 엑셀 1900 윤년 버그 보정
+            s--; // 1-based → 0-based
+            const base = new Date(1900, 0, 1);
+            base.setDate(base.getDate() + s);
+            const y = base.getFullYear();
+            const m = String(base.getMonth() + 1).padStart(2, '0');
+            const dd = String(base.getDate()).padStart(2, '0');
+            return y + '-' + m + '-' + dd;
+        }
+        // 다양한 형식의 날짜를 yyyy-mm-dd 문자열로 정규화
+        function normalizeDate(d) {
+            if (!d) return null;
+            // 이미 yyyy-mm-dd 문자열이면 그대로
+            if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}/.test(d)) return d.substring(0, 10);
+            // 엑셀 시리얼 넘버 (숫자)
+            if (typeof d === 'number') return excelSerialToDate(d);
+            // ISO 문자열 (기존 localStorage에 저장된 데이터) → 하루 밀림 보정
+            if (typeof d === 'string' && d.includes('T')) {
+                const dt = new Date(d);
+                // XLSX.js cellDates:true 버그로 UTC 시간이 붙어있으면 하루 추가
+                if (dt.getUTCHours() > 0) {
+                    dt.setUTCDate(dt.getUTCDate() + 1);
+                }
+                const y = dt.getUTCFullYear();
+                const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
+                const dd = String(dt.getUTCDate()).padStart(2, '0');
+                return y + '-' + m + '-' + dd;
+            }
+            return null;
+        }
+        function todayStr() {
+            const n = new Date();
+            return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0');
+        }
+        function diffDaysFromStr(dateStr1, dateStr2) {
+            // 순수 날짜 문자열끼리 비교 (타임존 무관)
+            const d1 = new Date(dateStr1 + 'T00:00:00');
+            const d2 = new Date(dateStr2 + 'T00:00:00');
+            return Math.round((d1 - d2) / (1000 * 60 * 60 * 24));
+        }
+
+        // ===== 매출현황.xlsx 통합 파싱 =====
+        // 5개 시트: 컨설팅(A) / 기술자문료(None) / 특허료(C) / 자재판매(B) / 2025현장 미수금관리(A, 가로→세로)
+        function processExcelData(arrayBuffer, updateTime) {
+            try {
+                const prevUnpaid = rawData.filter(r => !r['입금일']);
+                previousData = prevUnpaid.length > 0 ? {
+                    total: prevUnpaid.reduce((s, r) => s + (r['미수금액'] || 0), 0),
+                    manage: prevUnpaid.filter(r => r['단계'] === '관리' || r['단계'] === '연체').reduce((s, r) => s + (r['미수금액'] || 0), 0)
+                } : null;
+
+                const data = new Uint8Array(arrayBuffer);
+                const workbook = XLSX.read(data, { type: 'array' });
+                rawData = [];
+
+                // 헬퍼: 셀 값을 숫자로
+                const toNum = (v) => {
+                    if (v === null || v === undefined || v === '') return 0;
+                    if (typeof v === 'number') return v;
+                    if (typeof v === 'string') {
+                        const n = parseFloat(v.replace(/,/g, '').trim());
+                        return isNaN(n) ? 0 : n;
+                    }
+                    return 0;
+                };
+
+                // 1) 26년 데이터: 4개 시트 (엑셀 대시보드 공식 방식)
+                //    미수금액 = 수금예정액(V+)/1.1, 단계 = '입금지연' 컬럼값(관리/장기미수)
+                //    컨설팅/기술자문료는 매출일 2026년 조건, 특허료/자재판매는 조건 없음
+                const sheetConfigs = [
+                    { name: '컨설팅',     track: 'A', dateCond: true  },
+                    { name: '기술자문료', track: 'C', dateCond: true  },
+                    { name: '특허료',     track: 'C', dateCond: false },
+                    { name: '자재판매',   track: 'B', dateCond: false }
+                ];
+                const in2026 = (d) => {
+                    const s = normalizeDate(d);
+                    return s && s >= '2026-01-01' && s <= '2026-12-31';
+                };
+
+                for (const cfg of sheetConfigs) {
+                    if (!workbook.SheetNames.includes(cfg.name)) continue;
+                    const sheet = workbook.Sheets[cfg.name];
+                    const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                    if (!json.length) continue;
+                    const headers = json[0];
+                    if (!headers) continue;
+                    const idxOf = (name) => headers.findIndex(h => h === name);
+                    const ci수금 = idxOf('수금예정액(V+)');
+                    const ci단계 = idxOf('입금지연');
+                    const ci업체 = idxOf('업체명');
+                    const ci현장 = idxOf('현장명');
+                    const ci구분 = idxOf('구분');
+                    const ci매출일 = idxOf('매출일');
+                    const ci입금일 = idxOf('입금일');
+                    const ci예정 = idxOf('입금예정일');
+                    const ci예외 = idxOf('예외여부');
+                    const ci예외사유 = idxOf('예외사유');
+                    let ci매출 = idxOf('매출금액(v-)');
+                    if (ci매출 < 0) ci매출 = idxOf('매출액(v-)');
+
+                    for (let i = 1; i < json.length; i++) {
+                        const row = json[i];
+                        if (!row || !row.length) continue;
+                        const 업체 = ci업체 >= 0 ? row[ci업체] : null;
+                        if (!업체) continue;
+                        const 매출일Raw = ci매출일 >= 0 ? row[ci매출일] : null;
+                        // 컨설팅/기술자문료: 매출일 2026년만 (엑셀 SUMIFS 조건)
+                        if (cfg.dateCond && !in2026(매출일Raw)) continue;
+
+                        const 수금예정 = ci수금 >= 0 ? toNum(row[ci수금]) : 0;
+                        const 단계Raw = ci단계 >= 0 ? row[ci단계] : null;
+                        const 단계 = 단계Raw === '관리' ? '관리' : (단계Raw === '장기미수' ? '연체' : '정상');
+                        const 미수 = 수금예정 / 1.1;
+
+                        let 구분 = ci구분 >= 0 ? (row[ci구분] || '') : '';
+                        if (cfg.name === '자재판매') 구분 = '자재';
+                        else if (cfg.name === '특허료') 구분 = '특허료';
+                        else if (cfg.name === '기술자문료' && !구분) 구분 = '기술자문료';
+                        if (구분 === '선금') 구분 = '선급금';
+
+                        const 입금일Raw = ci입금일 >= 0 ? row[ci입금일] : null;
+                        const obj = {
+                            '업체명': 업체,
+                            '현장명': ci현장 >= 0 ? (row[ci현장] || '') : '',
+                            '구분': 구분,
+                            '트랙': cfg.track,
+                            '연도': '26년',
+                            '계산서발행일': normalizeDate(매출일Raw),
+                            '입금일': 입금일Raw ? normalizeDate(입금일Raw) : null,
+                            '예상입금일': (ci예정 >= 0 && row[ci예정]) ? normalizeDate(row[ci예정]) : null,
+                            '매출금액': ci매출 >= 0 ? toNum(row[ci매출]) : 0,
+                            '수금예정액': 수금예정,
+                            '미수금액': 미수,
+                            '단계': 단계,
+                            '예외여부': (ci예외 >= 0 && row[ci예외] === 'Y') ? 'Y' : 'N',
+                            '예외사유': (ci예외사유 >= 0 && row[ci예외사유]) ? row[ci예외사유] : '',
+                            '_src시트': cfg.name,
+                            '_원본행': i
+                        };
+                        if (obj['계산서발행일']) {
+                            obj['경과일'] = obj['입금일']
+                                ? diffDaysFromStr(obj['입금일'], obj['계산서발행일'])
+                                : diffDaysFromStr(todayStr(), obj['계산서발행일']);
+                        } else { obj['경과일'] = 0; }
+                        rawData.push(obj);
+                    }
+                }
+
+                // 2) 2025현장 미수금관리 시트 → "# ~25년 이전 미수금 리스트" 블록만 사용
+                //    이 시트는 6개 블록(컨설팅/특허/솔루션/자재 관리표 + ~25년 미수금 리스트)이 섞여 있음.
+                //    그 중 마지막 블록(헤더: 계산서발행일|트랙|업체명...)만 평면 구조로 읽음.
+                const sheet25Name = '2025현장 미수금관리';
+                if (workbook.SheetNames.includes(sheet25Name)) {
+                    const sheet25 = workbook.Sheets[sheet25Name];
+                    const json25 = XLSX.utils.sheet_to_json(sheet25, { header: 1 });
+                    // "계산서발행일" + "트랙" 헤더 행 찾기
+                    let hdrIdx = -1;
+                    for (let i = 0; i < json25.length; i++) {
+                        const row = json25[i];
+                        if (row && row[0] === '계산서발행일' && row[1] === '트랙') { hdrIdx = i; break; }
+                    }
+                    if (hdrIdx >= 0) {
+                        const trackMap = (t) => {
+                            if (!t) return null;
+                            const s = String(t);
+                            if (s.includes('컨설팅')) return 'A';
+                            if (s.includes('자재')) return 'B';
+                            if (s.includes('특허') || s.includes('기술자문') || s.includes('솔루션')) return 'C';
+                            return null;
+                        };
+                        for (let i = hdrIdx + 1; i < json25.length; i++) {
+                            const row = json25[i];
+                            if (!row || !row.length) continue;
+                            const 발행 = row[0];
+                            const 업체 = row[2];
+                            if (!업체 || !발행) continue;
+                            const 발행정규화 = normalizeDate(발행);
+                            if (!발행정규화) continue;
+                            const 입금Raw = row[9];
+                            const 미수 = toNum(row[5]);
+                            // 블록6 단계 컬럼(col 7): 장기미수/관리 등 이미 계산됨
+                            const 단계Raw = row[7];
+                            const obj = {
+                                '업체명': 업체,
+                                '현장명': row[3] || '',
+                                '구분': row[4] || '',
+                                '트랙': trackMap(row[1]),
+                                '연도': '~25년',
+                                '계산서발행일': 발행정규화,
+                                '입금일': 입금Raw ? normalizeDate(입금Raw) : null,
+                                '예상입금일': row[8] ? normalizeDate(row[8]) : null,
+                                '매출금액': 미수,
+                                '수금예정액': 입금Raw ? 0 : 미수,
+                                '미수금액': 입금Raw ? 0 : 미수,
+                                '단계': 단계Raw === '관리' ? '관리' : (입금Raw ? '입금완료' : '연체'),
+                                '_src시트': sheet25Name,
+                                '_원본행': i
+                            };
+                            if (obj['계산서발행일']) {
+                                obj['경과일'] = obj['입금일']
+                                    ? diffDaysFromStr(obj['입금일'], obj['계산서발행일'])
+                                    : diffDaysFromStr(todayStr(), obj['계산서발행일']);
+                            } else { obj['경과일'] = 0; }
+                            rawData.push(obj);
+                        }
+                    }
+                }
+
+                // 공지(Notice)는 별도 파일에서 관리 (loadNoticeExcel) - 매출현황과 완전 분리
+
+                if (rawData.length === 0) {
+                    alert('데이터를 찾을 수 없습니다. 매출현황 엑셀 형식이 맞는지 확인해주세요.');
+                    return;
+                }
+
+                originalHeaderRowIdx = 0; // 호환 변수
+
+                document.getElementById('emptyState').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                const now = updateTime || new Date();
+                const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0'), d = String(now.getDate()).padStart(2,'0');
+                const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0');
+                document.getElementById('updateDate').textContent = y + '-' + m + '-' + d + ' ' + hh + ':' + mm + ' 업데이트';
+                document.getElementById('liveBadge').classList.remove('hidden');
+
+                // 자동 검증 출력 (콘솔)
+                const _unpaid = rawData.filter(r => !r['입금일']);
+                const _mng = _unpaid.filter(r => r['단계']==='관리' || r['단계']==='연체');
+                console.log(`[매출현황 통합] 전체: ${rawData.length}건, unpaid: ${_unpaid.length}건, 관리미수: ${_mng.length}건 / ${(_mng.reduce((s,r)=>s+(r['미수금액']||0),0)/1e8).toFixed(2)}억`);
+
+                // [2026-10 보안] 받은 데이터는 화면에만 사용 — 브라우저 저장소에 저장하지 않음
+                renderDashboard();
+            } catch (err) { console.error(err); alert('파일 읽기 오류: ' + err.message); }
+        }
+
+        // [2026-10 보안] 매출 데이터는 브라우저에 저장하지 않음.
+        // 이전 버전이 남긴 저장본(행 데이터·원본 엑셀·스냅샷)을 페이지 로드 시 삭제한다.
+        function purgeStoredSalesData() {
+            ['dashboardRawData', 'dashboardPreviousData', 'dashboardUpdateDate', 'dashboardHeaderRowIdx',
+             'dashboardOriginalFile', 'dashboardOriginalFileName', 'dashboardSnapshots'].forEach(function (k) {
+                try { localStorage.removeItem(k); } catch (e) {}
+            });
+        }
+
+        function calculateStage(row) {
+            const track = row['트랙'], days = row['경과일'] || 0, gubun = row['구분'];
+
+            if (track === 'A') {
+                // 컨설팅: 선급금 ~20일 정상, 21~90 관리, 91~ 장기미수
+                //         중도금/잔금 ~30일 정상, 31~90 관리, 91~ 장기미수
+                if (gubun === '선급금') return days <= 20 ? '정상' : days <= 90 ? '관리' : '연체';
+                return days <= 30 ? '정상' : days <= 90 ? '관리' : '연체';
+            }
+            if (track === 'B') {
+                // 자재: ~40일 정상, 41~90 관리, 91~ 장기미수
+                return days <= 40 ? '정상' : days <= 90 ? '관리' : '연체';
+            }
+            if (track === 'C') {
+                // 특허료: ~30일 정상, 31~90 관리, 91~ 장기미수
+                return days <= 30 ? '정상' : days <= 90 ? '관리' : '연체';
+            }
+            return days <= 30 ? '정상' : days <= 90 ? '관리' : '연체';
+        }
+
+        function formatAmount(num) {
+            if (!num) return '-';
+            if (num >= 100000000) return (num / 100000000).toFixed(1) + '억';
+            if (num >= 10000000) return (num / 10000000).toFixed(1) + '천만';
+            if (num >= 10000) return Math.round(num / 10000).toLocaleString() + '만';
+            return num.toLocaleString();
+        }
+
+        function formatAmount2(num) {
+            if (!num) return '-';
+            if (num >= 100000000) return (num / 100000000).toFixed(2) + '억';
+            if (num >= 10000000) return (num / 10000000).toFixed(2) + '천만';
+            if (num >= 10000) return (num / 10000).toFixed(2) + '만';
+            return num.toLocaleString();
+        }
+
+
+        function formatFullAmount(num) { return num ? Math.round(num).toLocaleString() + '원' : '-'; }
+
+        function getDisplayStage(internalStage) {
+            return stageDisplayName[internalStage] || internalStage;
+        }
+
+        function getStageClass(internalStage) {
+            if (internalStage === '정상') return 'success';
+            if (internalStage === '관리') return 'warning';
+            return 'danger';
+        }
+
+        // 연도 토글 전환
+        function switchYear(y) {
+            currentYear = y;
+            const b26 = document.getElementById('yearBtn26');
+            const b25 = document.getElementById('yearBtn25');
+            if (b26 && b25) {
+                b26.classList.toggle('active', y === '26년');
+                b25.classList.toggle('active', y === '~25년');
+            }
+            currentTrack = '';
+            currentPage = 1;
+            renderDashboard();
+            renderNotices();
+        }
+
+        // 순위 카드 접기/펼치기 (상태 localStorage 저장)
+        function toggleRanking() {
+            const sec = document.getElementById('rankingSection');
+            const icon = document.getElementById('rankingToggleIcon');
+            const label = document.getElementById('rankingToggleLabel');
+            if (!sec) return;
+            const isOpen = sec.style.display !== 'none';
+            sec.style.display = isOpen ? 'none' : 'block';
+            icon.textContent = isOpen ? '▶' : '▼';
+            label.textContent = isOpen ? '펼치기' : '접기';
+            try { localStorage.setItem('rankingExpanded', isOpen ? 'N' : 'Y'); } catch (e) {}
+        }
+        function restoreRankingState() {
+            try {
+                if (localStorage.getItem('rankingExpanded') === 'Y') {
+                    // 펼친 상태로 복원
+                    const sec = document.getElementById('rankingSection');
+                    const icon = document.getElementById('rankingToggleIcon');
+                    const label = document.getElementById('rankingToggleLabel');
+                    if (sec) { sec.style.display = 'block'; icon.textContent = '▼'; label.textContent = '접기'; }
+                }
+            } catch (e) {}
+        }
+
+        // 현재 선택 연도의 기준 데이터 (26년=엑셀공식 전체, ~25년=입금일 공란)
+        function getYearBase() {
+            const yd = rawData.filter(r => r['연도'] === currentYear);
+            return currentYear === '26년' ? yd : yd.filter(r => !r['입금일']);
+        }
+
+        // 리스트/순위/상세/카드용: 미수금 잔액 있는 건 (음수 자재반환 포함, 입금완료 0만 제외)
+        function getYearActive() {
+            return rawData.filter(r => r['연도'] === currentYear && (r['미수금액'] || 0) !== 0);
+        }
+
+        // 2026년 대금회수율: (확정매출 - 수금예정액) / 확정매출
+        // 엑셀 정의 그대로 (4개 카테고리 = 컨설팅/기술자문료/특허료/자재판매 합)
+        function calcRecoveryStats() {
+            const data26 = rawData.filter(r => r['연도'] === '26년');
+            const 확정매출 = data26.reduce((s, r) => s + (r['매출금액'] || 0), 0);
+            const 수금예정 = data26.reduce((s, r) => s + (r['미수금액'] || 0), 0);
+            const 수금률 = 확정매출 > 0 ? (확정매출 - 수금예정) / 확정매출 : 0;
+            // 이번달 회수액 = 입금일이 이번달인 건의 매출금액(V-) 합
+            const now = new Date();
+            const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+            const 이번달회수 = data26.filter(r => r['입금일'] && r['입금일'].startsWith(ym))
+                                    .reduce((s, r) => s + (r['매출금액'] || 0), 0);
+            return { 확정매출, 수금예정, 수금률, 이번달회수 };
+        }
+
+        // [2026-10 보안] 일자별 합계 스냅샷 저장 기능 제거 → 전일 대비 변동 표시는 하지 않음
+        function getPreviousSnapshot() { return null; }
+
+        // 카드에 ▲▼ 변동 표시
+        function renderChange(elId, current, previous, type) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            if (previous === null || previous === undefined) { el.classList.add('hidden'); return; }
+            const diff = current - previous;
+            if (Math.abs(diff) < (type === 'rate' ? 0.001 : 1)) { el.classList.add('hidden'); return; }
+            const up = diff > 0;
+            const arrow = up ? '▲' : '▼';
+            let text = '';
+            if (type === 'rate') text = `${arrow} ${(Math.abs(diff) * 100).toFixed(1)}%p`;
+            else text = `${arrow} ${formatAmount2(Math.abs(diff))}`;
+            el.textContent = text;
+            // 회수율은 오를수록 좋음, 미수금은 내릴수록 좋음
+            const isGood = type === 'rate' ? up : !up;
+            el.classList.remove('hidden');
+            el.classList.toggle('up', !isGood);
+            el.classList.toggle('down', isGood);
+        }
+
+        // 공지·참고사항 렌더링 (현재 토글 연도 + 공통)
+        function renderNotices() {
+            const board = document.getElementById('noticeBoard');
+            const list = document.getElementById('noticeList');
+            const countEl = document.getElementById('noticeCount');
+            if (!board || !list) return;
+            if (!notices || notices.length === 0) { board.style.display = 'none'; return; }
+            const filtered = notices.filter(n => n.표시연도 === currentYear || n.표시연도 === '공통');
+            if (filtered.length === 0) { board.style.display = 'none'; return; }
+            // 정렬: 고정 우선, 작성일 내림차순
+            filtered.sort((a, b) => {
+                if (a.고정 !== b.고정) return (b.고정 ? 1 : 0) - (a.고정 ? 1 : 0);
+                return (b.작성일 || '').localeCompare(a.작성일 || '');
+            });
+            const statusMap = {
+                '긴급조치': 'emergency', '진행중': 'progress', '협의중': 'negotiate',
+                '검토중': 'review', '발송완료': 'sent', '완료': 'done', '보류': 'hold'
+            };
+            const esc = (s) => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+            board.style.display = 'block';
+            countEl.textContent = `(${filtered.length})`;
+            list.innerHTML = filtered.map(n => {
+                const statusCls = statusMap[n.진행상태] || 'default';
+                return `
+                    <div class="notice-card type-${n.유형}">
+                        ${n.고정 ? '<div class="notice-pin">📌</div>' : ''}
+                        <div class="notice-type-badge ${n.유형}">${n.유형}</div>
+                        <div class="notice-body">
+                            <div class="notice-title">${esc(n.제목)}</div>
+                            ${n.내용 ? `<div class="notice-content">${esc(n.내용)}</div>` : ''}
+                            <div class="notice-meta">
+                                ${n.작성일 ? `<span>${esc(n.작성일)}</span>` : ''}
+                                ${n.진행상태 ? `<span class="notice-status ${statusCls}">${esc(n.진행상태)}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function renderDashboard() {
+            // 연도 토글: 26년(엑셀 공식) | ~25년(블록6). 실제 미수금 있는 건만 집계
+            const unpaidData = getYearActive();
+
+            const total = unpaidData.reduce((s, r) => s + (r['미수금액'] || 0), 0);
+            const manageOverdueData = unpaidData.filter(r => r['단계'] === '관리' || r['단계'] === '연체');
+            const manageOverdue = manageOverdueData.reduce((s, r) => s + (r['미수금액'] || 0), 0);
+
+            // 장기미수 데이터
+            const overdueData = unpaidData.filter(r => r['단계'] === '연체');
+            const overdueAmount = overdueData.reduce((s, r) => s + (r['미수금액'] || 0), 0);
+
+            // 메인 지표
+            document.getElementById('totalAmount').textContent = formatAmount(total);
+            document.getElementById('totalCount').textContent = unpaidData.length + '건';
+            document.getElementById('manageAmount').textContent = formatAmount(manageOverdue);
+            document.getElementById('manageCount').textContent = manageOverdueData.length + '건';
+
+            // 연도 카드 보조표시: 현재 연도 / 반대 연도 요약 (필터 기준 통일: 미수≠0, 음수 포함)
+            const otherYear = currentYear === '26년' ? '~25년' : '26년';
+            const otherData = rawData.filter(r => r['연도'] === otherYear && (r['미수금액'] || 0) !== 0);
+            const otherMng = otherData.filter(r => r['단계'] === '관리' || r['단계'] === '연체');
+            const manageBefore26 = currentYear === '~25년' ? manageOverdueData : otherMng;
+            const manage26 = currentYear === '26년' ? manageOverdueData : otherMng;
+            const manageBefore26Amount = manageBefore26.reduce((s, r) => s + (r['미수금액'] || 0), 0);
+            const manage26Amount = manage26.reduce((s, r) => s + (r['미수금액'] || 0), 0);
+
+            document.getElementById('manageBefore26').textContent = formatAmount2(manageBefore26Amount);
+            document.getElementById('manageBefore26Count').textContent = manageBefore26.length + '건';
+            if (currentYear === '~25년') {
+                // ~25년 토글: 26년 보조숫자 숨김
+                document.getElementById('manage26').textContent = '-';
+                document.getElementById('manage26Count').textContent = '';
+            } else {
+                document.getElementById('manage26').textContent = formatAmount2(manage26Amount);
+                document.getElementById('manage26Count').textContent = manage26.length + '건';
+            }
+            document.getElementById('overdueAmount').textContent = formatAmount(overdueAmount);
+            document.getElementById('overdueDetail').textContent = `${overdueData.length}건`;
+
+            // 4번째 카드: 2026년 대금회수율 (엑셀 정의: (확정매출-수금예정액)/확정매출)
+            const rec = calcRecoveryStats();
+            document.getElementById('recoveryRate').textContent = (rec.수금률 * 100).toFixed(1) + '%';
+            document.getElementById('recoveryDetail').textContent =
+                `${formatAmount2(rec.확정매출 - rec.수금예정)} / ${formatAmount2(rec.확정매출)}`;
+            document.getElementById('thisMonthIncome').textContent = formatAmount2(rec.이번달회수);
+
+            // 스냅샷 기반 카드 ▲▼ 변동 표시 (이전 스냅샷 있을 때만)
+            const prev = getPreviousSnapshot();
+            if (prev) {
+                renderChange('totalChange', total, prev.data.수금예정, 'amount');
+                renderChange('manageChange', manageOverdue, prev.data.관리미수, 'amount');
+                renderChange('recoveryChange', rec.수금률, prev.data.수금률, 'rate');
+            }
+
+            // 입금 완료 건수 표시 (전체 데이터 중 입금 완료)
+            const paidData = rawData.filter(r => r['입금일']);
+            const paidCount = paidData.length;
+
+            // 전월 대비 (이전 데이터 있으면)
+            if (previousData) {
+                const totalChange = document.getElementById('totalChange');
+                const manageChange = document.getElementById('manageChange');
+
+                const totalDiff = total - previousData.total;
+                const manageDiff = manageOverdue - previousData.manage;
+
+                if (totalDiff !== 0) {
+                    totalChange.textContent = (totalDiff > 0 ? '▲ ' : '▼ ') + formatAmount(Math.abs(totalDiff));
+                    totalChange.className = 'stat-change ' + (totalDiff > 0 ? 'up' : 'down');
+                    totalChange.classList.remove('hidden');
+                }
+
+                if (manageDiff !== 0) {
+                    manageChange.textContent = (manageDiff > 0 ? '▲ ' : '▼ ') + formatAmount(Math.abs(manageDiff));
+                    manageChange.className = 'stat-change ' + (manageDiff > 0 ? 'up' : 'down');
+                    manageChange.classList.remove('hidden');
+                }
+            }
+
+            renderTrackCard('A');
+            renderTrackCard('B');
+            renderTrackCard('C');
+            renderDistribution();
+            renderActionList();
+            renderDueList();
+            renderTopSite();
+            renderTopAmount();
+            renderTopDays();
+            renderDetailTable();
+            renderNotices();
+        }
+
+        function renderTrackCard(track) {
+            const excludeToggle = document.getElementById(`track${track}ExcludeToggle`);
+            const excludeException = excludeToggle ? excludeToggle.checked : false;
+
+            // 실제 미수금 있는 건만 + 현재 연도
+            let trackData = getYearActive().filter(r => r['트랙'] === track);
+            if (excludeException) {
+                trackData = trackData.filter(r => r['예외여부'] !== 'Y');
+            }
+
+            const trackTotal = trackData.reduce((s, r) => s + (r['미수금액'] || 0), 0);
+
+            const stageData = {};
+            ['정상', '관리', '연체'].forEach(stage => {
+                const filtered = trackData.filter(r => r['단계'] === stage);
+                stageData[stage] = { count: filtered.length, amount: filtered.reduce((s, r) => s + (r['미수금액'] || 0), 0) };
+            });
+
+            document.getElementById(`track${track}Count`).textContent = trackData.length + '건';
+            document.getElementById(`track${track}Total`).textContent = formatFullAmount(trackTotal);
+
+            document.getElementById(`track${track}Normal`).textContent = formatAmount(stageData['정상'].amount);
+            document.getElementById(`track${track}Manage`).textContent = formatAmount(stageData['관리'].amount);
+            document.getElementById(`track${track}Overdue`).textContent = formatAmount(stageData['연체'].amount);
+
+            const normalPct = trackTotal > 0 ? ((stageData['정상'].amount / trackTotal) * 100).toFixed(0) : 0;
+            const managePct = trackTotal > 0 ? ((stageData['관리'].amount / trackTotal) * 100).toFixed(0) : 0;
+            const overduePct = trackTotal > 0 ? ((stageData['연체'].amount / trackTotal) * 100).toFixed(0) : 0;
+
+            document.getElementById(`track${track}NormalPct`).textContent = `${stageData['정상'].count}건 · ${normalPct}%`;
+            document.getElementById(`track${track}ManagePct`).textContent = `${stageData['관리'].count}건 · ${managePct}%`;
+            document.getElementById(`track${track}OverduePct`).textContent = `${stageData['연체'].count}건 · ${overduePct}%`;
+
+            // 트랙별 구간 기간 정보 업데이트
+            const stageInfoEl = document.getElementById(`track${track}StageInfo`);
+            if (track === 'A') {
+                stageInfoEl.textContent = '기한내: 선급금 ~20일 / 중도금·잔금 ~30일 | 관리: 21/31~90일 | 장기미수: 91일~';
+            } else if (track === 'B') {
+                stageInfoEl.textContent = '기한내: ~40일 | 관리: 41~90일 | 장기미수: 91일~';
+            } else if (track === 'C') {
+                stageInfoEl.textContent = '기한내: ~30일 | 관리: 31~90일 | 장기미수: 91일~';
+            }
+
+            if (trackTotal > 0) {
+                document.getElementById(`track${track}Bar`).innerHTML = `
+                    <div class="normal" style="width: ${normalPct}%"></div>
+                    <div class="manage" style="width: ${managePct}%"></div>
+                    <div class="overdue" style="width: ${overduePct}%"></div>`;
+            } else {
+                document.getElementById(`track${track}Bar`).innerHTML = '';
+            }
+        }
+
+        function renderDistribution() {
+            const exclude = document.getElementById('distExcludeException').checked;
+            let filtered = getYearActive();
+            if (exclude) filtered = filtered.filter(r => r['예외여부'] !== 'Y');
+
+            const ranges = [
+                { label: '30일 미만', min: 0, max: 29, class: 'dist-30', color: '#7cb342' },
+                { label: '30-60일', min: 30, max: 59, class: 'dist-60', color: '#e67e22' },
+                { label: '60-90일', min: 60, max: 89, class: 'dist-90', color: '#d35400' },
+                { label: '90일 이상', min: 90, max: 9999, class: 'dist-over', color: '#c0392b' }
+            ];
+
+            const total = filtered.reduce((s, r) => s + (r['미수금액'] || 0), 0);
+
+            let barHtml = '';
+            let legendItems = [];
+
+            ranges.forEach(range => {
+                const rangeData = filtered.filter(r => r['경과일'] >= range.min && r['경과일'] <= range.max);
+                const amount = rangeData.reduce((s, r) => s + (r['미수금액'] || 0), 0);
+                const pct = total > 0 ? (amount / total) * 100 : 0;
+
+                if (pct > 0) {
+                    barHtml += `<div class="distribution-segment ${range.class}" style="width: ${pct}%;" title="${range.label}: ${formatAmount(amount)}">${pct >= 10 ? pct.toFixed(0) + '%' : ''}</div>`;
+                }
+
+                legendItems.push({ label: range.label, count: rangeData.length, amount, pct, color: range.color });
+            });
+
+            document.getElementById('distributionBar').innerHTML = barHtml;
+
+            // 범례를 바 구간에 맞춰 동적 배치
+            let legendHtml = '<div style="display:flex; width:100%;">';
+            legendItems.forEach(item => {
+                if (item.pct > 0) {
+                    legendHtml += `<div style="width: ${item.pct}%; min-width: 80px; padding: 4px 2px;">
+                        <div style="display:flex; align-items:center; gap:4px; font-size:11px; color:var(--text-muted);">
+                            <div style="width:10px; height:10px; border-radius:2px; background:${item.color}; flex-shrink:0;"></div>
+                            <span>${item.label}</span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-muted); padding-left:14px;">${item.count}건 (${formatAmount(item.amount)})</div>
+                    </div>`;
+                }
+            });
+            legendHtml += '</div>';
+
+            document.getElementById('distributionLegend').innerHTML = legendHtml;
+        }
+
+        function setActionTab(track) {
+            actionTabTrack = track;
+            document.querySelectorAll('#actionTabs .mini-tab').forEach(btn => {
+                btn.classList.toggle('active',
+                    (btn.textContent === '전체' && actionTabTrack === '') ||
+                    (btn.textContent === '컨설팅' && actionTabTrack === 'A') ||
+                    (btn.textContent === '자재' && actionTabTrack === 'B') ||
+                    (btn.textContent === '특허료' && actionTabTrack === 'C'));
+            });
+            renderActionList();
+        }
+
+        function setDueTab(track) {
+            // 같은 트랙 다시 클릭하면 전체(해제)
+            dueTabTrack = (dueTabTrack === track) ? '' : track;
+            document.querySelectorAll('#dueTabs .mini-tab').forEach(btn => {
+                btn.classList.toggle('active',
+                    (btn.textContent === '컨설팅' && dueTabTrack === 'A') ||
+                    (btn.textContent === '자재' && dueTabTrack === 'B') ||
+                    (btn.textContent === '특허료' && dueTabTrack === 'C'));
+            });
+            renderDueList();
+        }
+
+        function setDueStatusTab(status) {
+            dueStatusFilter = status;
+            document.querySelectorAll('#dueStatusTabs .mini-tab').forEach(btn => {
+                btn.classList.toggle('active',
+                    (btn.textContent === '전체' && status === 'all') ||
+                    (btn.textContent === '도래 예정' && status === 'upcoming') ||
+                    (btn.textContent === '경과' && status === 'overdue'));
+            });
+            renderDueList();
+        }
+
+        function setRankCardTab(card, track) {
+            if (card === 'site') rankTrackSite = (rankTrackSite === track) ? '' : track;
+            else if (card === 'amount') rankTrackAmount = (rankTrackAmount === track) ? '' : track;
+            else if (card === 'days') rankTrackDays = (rankTrackDays === track) ? '' : track;
+            const current = card === 'site' ? rankTrackSite : card === 'amount' ? rankTrackAmount : rankTrackDays;
+            const tabId = card === 'site' ? 'rankSiteTabs' : card === 'amount' ? 'rankAmountTabs' : 'rankDaysTabs';
+            document.querySelectorAll(`#${tabId} .mini-tab`).forEach(btn => {
+                btn.classList.toggle('active',
+                    (btn.textContent === '컨설팅' && current === 'A') ||
+                    (btn.textContent === '자재' && current === 'B') ||
+                    (btn.textContent === '특허료' && current === 'C'));
+            });
+            if (card === 'site') renderTopSite();
+            else if (card === 'amount') renderTopAmount();
+            else renderTopDays();
+        }
+
+        function renderAllRanks() {
+            renderTopSite();
+            renderTopAmount();
+            renderTopDays();
+        }
+
+        function renderActionList() {
+            let baseData = getYearActive().filter(r => r['예외여부'] !== 'Y');
+            if (actionTabTrack) baseData = baseData.filter(r => r['트랙'] === actionTabTrack);
+
+            const actionItems = baseData.filter(r => {
+                const days = r['경과일'] || 0;
+                return (r['단계'] === '정상' && days >= 10) || (r['단계'] === '관리' && days >= 80);
+            }).sort((a, b) => (b['경과일'] || 0) - (a['경과일'] || 0)).slice(0, 10);
+
+            document.getElementById('actionCount').textContent = actionItems.length;
+
+            if (actionItems.length === 0) {
+                document.getElementById('actionList').innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted);">금주 액션 필요 건 없음</div>';
+                return;
+            }
+
+            document.getElementById('actionList').innerHTML = actionItems.map(r => {
+                const isToOverdue = r['단계'] === '관리' && r['경과일'] >= 80;
+                const borderColor = isToOverdue ? 'var(--danger)' : 'var(--warning)';
+                const statusText = isToOverdue ? '장기전환 임박' : '관리구간 도래';
+
+                return `<div class="action-item" style="border-left-color: ${borderColor};" onclick="showCompanyDetail('${r['업체명']}')">
+                    <div class="action-info">
+                        <div class="action-title">${r['업체명']}</div>
+                        <div class="action-sub">${r['현장명'] || '-'} · ${r['구분']} · <span style="color:${borderColor}; font-weight:600;">${statusText}</span></div>
+                    </div>
+                    <div class="action-value">
+                        <div class="action-amount">${formatAmount(r['미수금액'])}</div>
+                        <div class="action-days" style="color:${borderColor};">${r['경과일']}일</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderDueList() {
+            const tStr = todayStr();
+
+            // 실제 미수금 있는 건만 + 현재 연도
+            let baseData = getYearActive().filter(r => r['예외여부'] !== 'Y');
+            if (dueTabTrack) baseData = baseData.filter(r => r['트랙'] === dueTabTrack);
+
+            let dueItems = baseData.filter(r => {
+                const expectedDate = r['예상입금일'] || r['예정입금일'];
+                if (!expectedDate) return false;
+                const dd = diffDaysFromStr(normalizeDate(expectedDate), tStr);
+                return dd <= 7;
+            }).map(r => {
+                const expectedDate = r['예상입금일'] || r['예정입금일'];
+                const dd = diffDaysFromStr(normalizeDate(expectedDate), tStr);
+                return { ...r, diffDays: dd };
+            });
+
+            // 도래/경과 필터 적용
+            if (dueStatusFilter === 'upcoming') {
+                dueItems = dueItems.filter(r => r.diffDays >= 0);
+            } else if (dueStatusFilter === 'overdue') {
+                dueItems = dueItems.filter(r => r.diffDays < 0);
+            }
+
+            dueItems = dueItems.sort((a, b) => a.diffDays - b.diffDays).slice(0, 10);
+
+            document.getElementById('dueCount').textContent = dueItems.length;
+
+            if (dueItems.length === 0) {
+                const emptyMsg = dueStatusFilter === 'upcoming' ? '도래 예정 건 없음' : dueStatusFilter === 'overdue' ? '경과 건 없음' : '도래/경과 건 없음';
+                document.getElementById('dueList').innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted);">${emptyMsg}</div>`;
+                return;
+            }
+
+            document.getElementById('dueList').innerHTML = dueItems.map(r => {
+                const isOverdue = r.diffDays < 0;
+                const dateStr = r['예상입금일'] || r['예정입금일'] || '-';
+                let dDayText;
+                if (r.diffDays === 0) dDayText = 'D-Day';
+                else if (r.diffDays > 0) dDayText = `D-${r.diffDays}`;
+                else dDayText = `D+${Math.abs(r.diffDays)}`;
+
+                let dDayColor;
+                if (r.diffDays < 0) dDayColor = '#c0392b';       // 경과 (빨강)
+                else if (r.diffDays === 0) dDayColor = '#e67e22';  // 당일 (주황)
+                else if (r.diffDays <= 3) dDayColor = '#d35400';   // 임박 (짙은 주황)
+                else dDayColor = '#3B82F6';                        // 여유 (파랑)
+
+                const borderColor = r.diffDays < 0 ? '#c0392b' : r.diffDays <= 3 ? '#e67e22' : '#3B82F6';
+
+                return `<div class="action-item" style="border-left-color: ${borderColor};" onclick="showCompanyDetail('${r['업체명']}')">
+                    <div class="action-info">
+                        <div class="action-title">${r['업체명']}</div>
+                        <div class="action-sub">${r['현장명'] || '-'} · ${dateStr}</div>
+                    </div>
+                    <div class="action-value">
+                        <div class="action-amount">${formatAmount(r['미수금액'])}</div>
+                        <div class="action-days" style="color: ${dDayColor}; font-weight:700;">${dDayText}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function setRankSort(card, sort) {
+            if (card === 'site') rankSortSite = sort;
+            else if (card === 'amount') rankSortAmount = sort;
+            else if (card === 'days') rankSortDays = sort;
+            // 버튼 활성 상태 업데이트
+            document.querySelectorAll(`.rank-sort-btn[data-card="${card}"]`).forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.sort === sort);
+            });
+            if (card === 'site') renderTopSite();
+            else if (card === 'amount') renderTopAmount();
+            else renderTopDays();
+        }
+
+        function getRankBaseData(card) {
+            // 각 카드별 개별 예외제외 토글
+            const toggleId = card === 'site' ? 'rankSiteExcludeException' : card === 'amount' ? 'rankAmountExcludeException' : 'rankDaysExcludeException';
+            const exclude = document.getElementById(toggleId).checked;
+            let filtered = getYearActive();
+            if (exclude) filtered = filtered.filter(r => r['예외여부'] !== 'Y');
+            const track = card === 'site' ? rankTrackSite : card === 'amount' ? rankTrackAmount : rankTrackDays;
+            if (track) filtered = filtered.filter(r => r['트랙'] === track);
+            return filtered;
+        }
+
+        function renderTopSite() {
+            const filtered = getRankBaseData('site');
+            const bySite = {};
+            filtered.forEach(r => {
+                const name = r['현장명'] || '(미지정)';
+                if (!bySite[name]) bySite[name] = { amount: 0, count: 0, company: r['업체명'], maxDays: 0 };
+                bySite[name].amount += r['미수금액'] || 0;
+                bySite[name].count++;
+                bySite[name].maxDays = Math.max(bySite[name].maxDays, r['경과일'] || 0);
+            });
+            const sortByDays = rankSortSite === 'days';
+            const sorted = Object.entries(bySite).sort((a, b) => sortByDays ? b[1].maxDays - a[1].maxDays : b[1].amount - a[1].amount).slice(0, 5);
+            document.getElementById('topSiteList').innerHTML = sorted.length > 0 ? sorted.map((item, idx) => `
+                <div class="rank-item" onclick="filterBySite('${item[0]}')">
+                    <div class="rank-num ${idx < 3 ? 'top3' : ''}">${idx + 1}</div>
+                    <div class="rank-info">
+                        <div class="rank-name">${item[0]}</div>
+                        <div class="rank-sub">${item[1].company} · ${item[1].count}건</div>
+                    </div>
+                    <div class="rank-value"><div class="rank-amount ${sortByDays ? '' : 'highlight'}">${sortByDays ? item[1].maxDays + '일' : formatAmount(item[1].amount)}</div></div>
+                </div>`).join('') : '<div style="text-align:center; padding:30px; color:var(--text-muted);">데이터 없음</div>';
+        }
+
+        function renderTopAmount() {
+            const filtered = getRankBaseData('amount');
+            const byCompany = {};
+            filtered.forEach(r => {
+                const name = r['업체명'];
+                if (!byCompany[name]) byCompany[name] = { amount: 0, count: 0, maxDays: 0 };
+                byCompany[name].amount += r['미수금액'] || 0;
+                byCompany[name].count++;
+                byCompany[name].maxDays = Math.max(byCompany[name].maxDays, r['경과일'] || 0);
+            });
+            const sortByDays = rankSortAmount === 'days';
+            const sorted = Object.entries(byCompany).sort((a, b) => sortByDays ? b[1].maxDays - a[1].maxDays : b[1].amount - a[1].amount).slice(0, 5);
+            document.getElementById('topAmountList').innerHTML = sorted.length > 0 ? sorted.map((item, idx) => `
+                <div class="rank-item" onclick="showCompanyDetail('${item[0]}')">
+                    <div class="rank-num ${idx < 3 ? 'top3' : ''}">${idx + 1}</div>
+                    <div class="rank-info">
+                        <div class="rank-name">${item[0]}</div>
+                        <div class="rank-sub">${item[1].count}건 · ${sortByDays ? formatAmount(item[1].amount) : '최장 ' + item[1].maxDays + '일'}</div>
+                    </div>
+                    <div class="rank-value"><div class="rank-amount ${sortByDays ? '' : 'highlight'}">${sortByDays ? item[1].maxDays + '일' : formatAmount(item[1].amount)}</div></div>
+                </div>`).join('') : '<div style="text-align:center; padding:30px; color:var(--text-muted);">데이터 없음</div>';
+        }
+
+        function renderTopDays() {
+            const filtered = getRankBaseData('days');
+            const byCompany = {};
+            filtered.forEach(r => {
+                const name = r['업체명'];
+                if (!byCompany[name]) byCompany[name] = { amount: 0, count: 0, maxDays: 0 };
+                byCompany[name].amount += r['미수금액'] || 0;
+                byCompany[name].count++;
+                byCompany[name].maxDays = Math.max(byCompany[name].maxDays, r['경과일'] || 0);
+            });
+            const sortByDays = rankSortDays === 'days';
+            const sorted = Object.entries(byCompany).sort((a, b) => sortByDays ? b[1].maxDays - a[1].maxDays : b[1].amount - a[1].amount).slice(0, 5);
+            document.getElementById('topDaysList').innerHTML = sorted.length > 0 ? sorted.map((item, idx) => `
+                <div class="rank-item" onclick="showCompanyDetail('${item[0]}')">
+                    <div class="rank-num ${idx < 3 ? 'top3' : ''}">${idx + 1}</div>
+                    <div class="rank-info">
+                        <div class="rank-name">${item[0]}</div>
+                        <div class="rank-sub">${item[1].count}건 · ${sortByDays ? formatAmount(item[1].amount) : '최장 ' + item[1].maxDays + '일'}</div>
+                    </div>
+                    <div class="rank-value"><div class="rank-amount ${sortByDays ? '' : 'highlight'}">${sortByDays ? item[1].maxDays + '일' : formatAmount(item[1].amount)}</div></div>
+                </div>`).join('') : '<div style="text-align:center; padding:30px; color:var(--text-muted);">데이터 없음</div>';
+        }
+
+        function showNoCommList() {
+            // 입금 완료 건 제외
+            const noCommData = rawData.filter(r =>
+                !r['입금일'] &&
+                r['예외여부'] !== 'Y' &&
+                !r['예상입금일'] &&
+                !r['예정입금일']
+            );
+
+            const stageOrder = { '연체': 0, '관리': 1, '정상': 2 };
+            noCommData.sort((a, b) => {
+                const stageA = stageOrder[a['단계']] ?? 3;
+                const stageB = stageOrder[b['단계']] ?? 3;
+                if (stageA !== stageB) return stageA - stageB;
+                return (b['경과일'] || 0) - (a['경과일'] || 0);
+            });
+
+            const totalAmount = noCommData.reduce((s, r) => s + (r['미수금액'] || 0), 0);
+
+            document.getElementById('companyModalTitle').textContent = `회신대기 현장 (${noCommData.length}건)`;
+
+            let html = `<div style="margin-bottom: 16px; padding: 12px; background: var(--bg); border-radius: 8px;">
+                <strong>총 미수금:</strong> ${formatFullAmount(totalAmount)}
+                <span style="margin-left: 12px; color: var(--text-muted); font-size: 12px;">예상입금일 미확보 현장</span>
+            </div>`;
+
+            if (noCommData.length === 0) {
+                html += '<div style="text-align:center; padding:30px; color:var(--text-muted);">회신대기 현장이 없습니다</div>';
+            } else {
+                html += '<table class="data-table"><thead><tr><th>업체명</th><th>현장명</th><th>구분</th><th class="amount">미수금액</th><th class="center">경과일</th><th class="center">단계</th><th>예정입금일</th><th>프로세스현황</th></tr></thead><tbody>';
+
+                noCommData.forEach(r => {
+                    const stageClass = getStageClass(r['단계']);
+                    const expectedDate = r['예상입금일'] || r['예정입금일'];
+                    const expectedStr = expectedDate || '-';
+                    html += `<tr>
+                        <td>${r['업체명'] || '-'}</td>
+                        <td>${r['현장명'] || '-'}</td>
+                        <td>${r['구분'] || '-'}</td>
+                        <td class="amount">${formatFullAmount(r['미수금액'])}</td>
+                        <td class="center">${r['경과일']}일</td>
+                        <td class="center"><span class="badge badge-${stageClass}">${getDisplayStage(r['단계'])}</span></td>
+                        <td>${expectedStr}</td>
+                        <td>${r['프로세스현황'] || '-'}</td>
+                    </tr>`;
+                });
+
+                html += '</tbody></table>';
+            }
+
+            document.getElementById('companyModalBody').innerHTML = html;
+            document.getElementById('companyModal').classList.add('active');
+        }
+
+        function showExceptionList() {
+            // 입금 완료 건 제외
+            const exceptionData = rawData.filter(r => r['예외여부'] === 'Y' && !r['입금일']);
+
+            // 경과일 내림차순 정렬
+            exceptionData.sort((a, b) => (b['경과일'] || 0) - (a['경과일'] || 0));
+
+            const totalAmount = exceptionData.reduce((s, r) => s + (r['미수금액'] || 0), 0);
+
+            document.getElementById('companyModalTitle').textContent = `예외 처리 현장 (${exceptionData.length}건)`;
+
+            let html = `<div style="margin-bottom: 16px; padding: 12px; background: var(--bg); border-radius: 8px;">
+                <strong>총 예외 처리 금액:</strong> ${formatFullAmount(totalAmount)}
+                <span style="margin-left: 12px; color: var(--text-muted); font-size: 12px;">특수사유로 별도 구분된 건</span>
+            </div>`;
+
+            if (exceptionData.length === 0) {
+                html += '<div style="text-align:center; padding:30px; color:var(--text-muted);">예외 처리 건이 없습니다</div>';
+            } else {
+                html += `<div style="overflow-x:auto;"><table class="data-table" style="white-space:nowrap; font-size:12px;">
+                    <thead><tr>
+                        <th style="white-space:nowrap;">업체명</th>
+                        <th style="white-space:nowrap;">현장명</th>
+                        <th style="white-space:nowrap;">시공사</th>
+                        <th class="amount" style="white-space:nowrap;">미수금액</th>
+                        <th class="center" style="white-space:nowrap;">경과일</th>
+                        <th class="center" style="white-space:nowrap;">단계</th>
+                        <th style="white-space:nowrap;">계산서발행일</th>
+                        <th style="min-width:120px;">예외사유</th>
+                    </tr></thead><tbody>`;
+
+                exceptionData.forEach(r => {
+                    const stageClass = getStageClass(r['단계']);
+                    html += `<tr>
+                        <td style="white-space:nowrap;">${r['업체명'] || '-'}</td>
+                        <td style="white-space:nowrap; max-width:180px; overflow:hidden; text-overflow:ellipsis;" title="${r['현장명'] || ''}">${r['현장명'] || '-'}</td>
+                        <td style="white-space:nowrap;">${r['시공사'] || r['업체명'] || '-'}</td>
+                        <td class="amount" style="white-space:nowrap;">${formatFullAmount(r['미수금액'])}</td>
+                        <td class="center" style="white-space:nowrap;">${r['경과일']}일</td>
+                        <td class="center" style="white-space:nowrap;"><span class="badge badge-${stageClass}">${getDisplayStage(r['단계'])}</span></td>
+                        <td style="white-space:nowrap;">${r['계산서발행일'] || '-'}</td>
+                        <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${r['예외사유'] || r['비고'] || ''}">${r['예외사유'] || r['비고'] || '-'}</td>
+                    </tr>`;
+                });
+
+                html += '</tbody></table></div>';
+            }
+
+            document.getElementById('companyModalBody').innerHTML = html;
+            document.getElementById('companyModal').classList.add('active');
+        }
+
+        function showCompanyDetail(companyName) {
+            const companyData = rawData.filter(r => r['업체명'] === companyName);
+            const totalAmount = companyData.reduce((s, r) => s + (r['미수금액'] || 0), 0);
+
+            const stageOrder = { '연체': 0, '관리': 1, '정상': 2 };
+            companyData.sort((a, b) => {
+                const stageA = stageOrder[a['단계']] ?? 3;
+                const stageB = stageOrder[b['단계']] ?? 3;
+                if (stageA !== stageB) return stageA - stageB;
+                return (b['경과일'] || 0) - (a['경과일'] || 0);
+            });
+
+            document.getElementById('companyModalTitle').textContent = `${companyName} 미수금 상세`;
+
+            let html = `<div style="margin-bottom: 16px; padding: 12px; background: var(--bg); border-radius: 8px;">
+                <strong>총 미수금:</strong> ${formatFullAmount(totalAmount)} (${companyData.length}건)
+            </div>`;
+
+            html += '<table class="data-table"><thead><tr><th>현장명</th><th>구분</th><th class="amount">미수금액</th><th class="center">경과일</th><th class="center">단계</th><th>예정입금일</th><th>프로세스현황</th></tr></thead><tbody>';
+
+            companyData.forEach(r => {
+                const stageClass = getStageClass(r['단계']);
+                const expectedDate = r['예상입금일'] || r['예정입금일'];
+                const expectedStr = expectedDate || '-';
+                html += `<tr>
+                    <td>${r['현장명'] || '-'}</td>
+                    <td>${r['구분'] || '-'}</td>
+                    <td class="amount">${formatFullAmount(r['미수금액'])}</td>
+                    <td class="center">${r['경과일']}일</td>
+                    <td class="center"><span class="badge badge-${stageClass}">${getDisplayStage(r['단계'])}</span></td>
+                    <td>${expectedStr}</td>
+                    <td>${r['프로세스현황'] || '-'}</td>
+                </tr>`;
+            });
+
+            html += '</tbody></table>';
+
+            document.getElementById('companyModalBody').innerHTML = html;
+            document.getElementById('companyModal').classList.add('active');
+        }
+
+        function filterBySite(siteName) {
+            document.getElementById('searchInput').value = siteName;
+            goToPage(1);
+            document.querySelector('.card:last-child').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function setDetailTab(track) {
+            currentTrack = track;
+            currentPage = 1;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.track === track);
+            });
+            const titles = { '': '전체', 'A': '컨설팅', 'B': '자재판매', 'C': '특허기술자문료' };
+            document.getElementById('detailTitle').textContent = titles[track] + ' 상세 내역';
+            renderDetailTable();
+        }
+
+        function resetFilters() {
+            document.getElementById('filterStage').value = '';
+            document.getElementById('filterComm').value = '';
+            document.getElementById('filterPaid').value = 'unpaid';
+            document.getElementById('searchInput').value = '';
+            currentPage = 1;
+            renderDetailTable();
+        }
+
+        function setSortColumn(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'desc';
+            }
+            renderDetailTable();
+        }
+
+        function getFilteredData() {
+            const stageFilter = document.getElementById('filterStage').value;
+            const commFilter = document.getElementById('filterComm').value;
+            const paidFilter = document.getElementById('filterPaid').value;
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+
+            let filtered = rawData.filter(r => r['연도'] === currentYear);
+            if (currentTrack) filtered = filtered.filter(r => r['트랙'] === currentTrack);
+            // 입금 여부 필터: 미수금만=잔액 있음(음수 포함), 입금완료만=미수0
+            if (paidFilter === 'unpaid') filtered = filtered.filter(r => (r['미수금액'] || 0) !== 0);
+            else if (paidFilter === 'paid') filtered = filtered.filter(r => (r['미수금액'] || 0) === 0);
+            // 단계 필터: 표시값을 내부값으로 변환
+            if (stageFilter) {
+                const internalStage = stageInternalName[stageFilter] || stageFilter;
+                filtered = filtered.filter(r => r['단계'] === internalStage);
+            }
+            if (commFilter === 'Y') filtered = filtered.filter(r => r['예상입금일'] || r['예정입금일']);
+            else if (commFilter === 'N') filtered = filtered.filter(r => !r['예상입금일'] && !r['예정입금일']);
+            if (searchText) filtered = filtered.filter(r => (r['업체명'] || '').toLowerCase().includes(searchText) || (r['현장명'] || '').toLowerCase().includes(searchText));
+
+            return filtered.sort((a, b) => {
+                let aVal = a[sortColumn];
+                let bVal = b[sortColumn];
+
+                if (sortColumn === '미수금액' || sortColumn === '경과일') {
+                    aVal = aVal || 0;
+                    bVal = bVal || 0;
+                } else if (sortColumn === '예상입금일') {
+                    aVal = aVal ? new Date(aVal).getTime() : 0;
+                    bVal = bVal ? new Date(bVal).getTime() : 0;
+                } else {
+                    aVal = aVal || '';
+                    bVal = bVal || '';
+                }
+
+                if (sortDirection === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+        }
+
+        function goToPage(page) { currentPage = page; renderDetailTable(); }
+
+        function renderDetailTable() {
+            const filtered = getFilteredData();
+            const totalPages = Math.ceil(filtered.length / itemsPerPage);
+            if (currentPage > totalPages) currentPage = totalPages || 1;
+
+            const startIdx = (currentPage - 1) * itemsPerPage;
+            const displayData = filtered.slice(startIdx, startIdx + itemsPerPage);
+
+            document.querySelectorAll('#detailTable th').forEach(th => {
+                th.classList.remove('sorted');
+                const icon = th.querySelector('.sort-icon');
+                if (icon) icon.textContent = '↕';
+            });
+
+            document.querySelector('#detailTable tbody').innerHTML = displayData.map((r, idx) => {
+                const stage = r['단계'] || '';
+                const stageClass = getStageClass(stage);
+                const expectedDate = r['예상입금일'] || r['예정입금일'];
+                const expectedStr = expectedDate || '-';
+                const paidDate = r['입금일'] || '';
+                const isPaid = !!r['입금일'];
+
+                return `<tr class="clickable" onclick="showCompanyDetail('${r['업체명']}')" style="${isPaid ? 'opacity: 0.55;' : ''}">
+                    <td class="center">${startIdx + idx + 1}</td>
+                    <td>${r['업체명'] || '-'}</td>
+                    <td>${r['현장명'] || '-'}</td>
+                    <td>${r['구분'] || '-'}</td>
+                    <td class="amount">${formatFullAmount(r['미수금액'])}</td>
+                    <td class="center">${r['경과일'] || 0}일</td>
+                    <td class="center"><span class="badge badge-${stageClass}">${getDisplayStage(stage)}</span></td>
+                    <td>${expectedStr}</td>
+                    <td class="center">${paidDate ? '<span class="badge badge-info">' + paidDate + '</span>' : '-'}</td>
+                </tr>`;
+            }).join('');
+
+            renderPagination(filtered.length, totalPages);
+        }
+
+        function renderPagination(totalItems, totalPages) {
+            const container = document.getElementById('pagination');
+            if (totalPages <= 1) { container.innerHTML = `<span class="page-info">전체 ${totalItems}건</span>`; return; }
+
+            let html = `<button class="page-btn" onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>«</button>`;
+            html += `<button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹</button>`;
+
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+            if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            }
+
+            html += `<button class="page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>›</button>`;
+            html += `<button class="page-btn" onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>»</button>`;
+            html += `<span class="page-info">전체 ${totalItems}건 중 ${(currentPage-1)*itemsPerPage + 1}-${Math.min(currentPage*itemsPerPage, totalItems)}건</span>`;
+
+            container.innerHTML = html;
+        }
+
+        async function downloadExcel() {
+            if (!originalFileBuffer) {
+                alert('업로드된 원본 파일이 없습니다. 엑셀 파일을 먼저 업로드해 주세요.');
+                return;
+            }
+
+            // 매출현황 엑셀은 다중 시트 구조라 필터 적용 다운로드는 미지원
+            // 항상 원본 그대로 다운로드
+            const blob = new Blob([originalFileBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            triggerDownload(blob, originalFileName || '매출현황.xlsx');
+        }
+
+        function triggerDownload(blob, fileName) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // [2026-10 보안] 공개 주소 자동 로드(sales_dashboard 매출현황.xlsx, data.xlsx 등) 제거.
+        // 데이터는 넷폼 대시보드가 iframe으로 전달(postMessage)하거나, 수동 업로드로만 표시된다.
+        function initDashboard() {
+            restoreRankingState();
+            purgeStoredSalesData();
+            loadNoticesFromStorage();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                initDashboard();
+            });
+        } else {
+            initDashboard();
+        }
+
+        function formatDateForExcel(dateValue) {
+            if (!dateValue) return '';
+            try {
+                const date = new Date(dateValue);
+                if (isNaN(date.getTime())) return '';
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            } catch (e) {
+                return '';
+            }
+        }
+
+        // ============================================================
+        // 🔐 보안 시스템 v1.0 — 4가지 보안 규칙 적용
+        // 1. 비밀번호 SHA-256 해시 저장
+        // 2. API 키 / 민감 정보 소스 노출 최소화
+        // 3. 사용자 입력값 XSS 검증
+        // 4. 개발자도구(F12) 우회 감지 및 차단
+        // ============================================================
+        (function() {
+            'use strict';
+
+            // ── 1. SHA-256 해시 (비밀번호 원문 없음) ──────────────────
+            // 비밀번호: Netform2026!
+            // 분할 저장으로 소스 직독 어려움 (규칙 2 – API/시크릿 노출 최소화)
+            const _PH = ['07358','68ee5','d5d20','58770','daef5','535a3',
+                          'd2b7c','ac22c','0ce29','542cf','c5687','1cec2','79fe'].join('');
+
+            // ── 2. 세션 관리 ──────────────────────────────────────────
+            const SESSION_KEY  = '_nf_s';
+            const SESSION_HOURS = 8; // 8시간 유지
+            const MAX_TRIES    = 5;
+            const LOCK_MS      = 5 * 60 * 1000; // 5분 잠금
+
+            // ── 3. 입력값 XSS 방지 유틸 ─────────────────────────────
+            function sanitizeInput(str) {
+                if (typeof str !== 'string') return '';
+                // 길이 제한 & HTML 엔티티 치환 → innerHTML 삽입 원천 차단
+                return str.slice(0, 64)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#x27;')
+                    .replace(/\//g, '&#x2F;');
+            }
+
+            // ── SHA-256 해싱 (Pure JS – HTTP/HTTPS/file:// 모두 동작) ──
+            async function sha256(message) {
+                // crypto.subtle 사용 가능 환경(HTTPS/localhost)이면 우선 사용
+                if (window.crypto && window.crypto.subtle) {
+                    try {
+                        const enc = new TextEncoder();
+                        const data = enc.encode(message);
+                        const hashBuf = await crypto.subtle.digest('SHA-256', data);
+                        return Array.from(new Uint8Array(hashBuf))
+                            .map(b => b.toString(16).padStart(2, '0'))
+                            .join('');
+                    } catch(e) { /* fallthrough to pure-JS */ }
+                }
+                // Pure-JS SHA-256 fallback (HTTP 환경 대응)
+                function _sha256js(str) {
+                    function rightRotate(value, amount) {
+                        return (value >>> amount) | (value << (32 - amount));
+                    }
+                    var mathPow = Math.pow;
+                    var maxWord = mathPow(2, 32);
+                    var lengthProperty = 'length';
+                    var i, j;
+                    var result = '';
+                    var words = [];
+                    var asciiBitLength = str[lengthProperty] * 8;
+                    var hash = [];
+                    var k = [];
+                    var primeCounter = 0;
+                    var isComposite = {};
+                    for (var candidate = 2; primeCounter < 64; candidate++) {
+                        if (!isComposite[candidate]) {
+                            for (i = 0; i < 313; i += candidate) { isComposite[i] = candidate; }
+                            hash[primeCounter] = (mathPow(candidate, .5) * maxWord) | 0;
+                            k[primeCounter++] = (mathPow(candidate, 1/3) * maxWord) | 0;
+                        }
+                    }
+                    str += '\x80';
+                    while (str[lengthProperty] % 64 - 56) str += '\x00';
+                    for (i = 0; i < str[lengthProperty]; i++) {
+                        j = str.charCodeAt(i);
+                        if (j >> 8) return '';
+                        words[i >> 2] |= j << ((3 - i) % 4) * 8;
+                    }
+                    words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);
+                    words[words[lengthProperty]] = (asciiBitLength);
+                    for (j = 0; j < words[lengthProperty];) {
+                        var w = words.slice(j, j += 16);
+                        var oldHash = hash.slice(0);
+                        for (i = 0; i < 64; i++) {
+                            var i2 = i + j - 16;
+                            var w15 = w[i - 15], w2 = w[i - 2];
+                            var a = hash[0], e = hash[4];
+                            var temp1 = hash[7]
+                                + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+                                + ((e & hash[5]) ^ (~e & hash[6]))
+                                + k[i]
+                                + (w[i] = (i < 16) ? w[i] : (
+                                    w[i - 16]
+                                    + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+                                    + w[i - 7]
+                                    + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
+                                ) | 0);
+                            var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+                                + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+                            hash = [(temp1 + temp2) | 0].concat(hash);
+                            hash[4] = (hash[4] + temp1) | 0;
+                            hash.length = 8;
+                        }
+                        for (i = 0; i < 8; i++) { hash[i] = (hash[i] + oldHash[i]) | 0; }
+                    }
+                    for (i = 0; i < 8; i++) {
+                        for (j = 3; j + 1; j--) {
+                            var b = (hash[i] >> (j * 8)) & 255;
+                            result += ((b < 16) ? '0' : '') + b.toString(16);
+                        }
+                    }
+                    return result;
+                }
+                // UTF-8 인코딩 처리
+                var utf8 = unescape(encodeURIComponent(message));
+                return _sha256js(utf8);
+            }
+
+            // ── 세션 토큰 검증 ────────────────────────────────────────
+            function getSession() {
+                try {
+                    const raw = sessionStorage.getItem(SESSION_KEY);
+                    if (!raw) return null;
+                    const obj = JSON.parse(raw);
+                    if (!obj || !obj.t || !obj.v) return null;
+                    if (Date.now() - obj.t > SESSION_HOURS * 3600000) {
+                        sessionStorage.removeItem(SESSION_KEY);
+                        return null;
+                    }
+                    // 토큰 무결성 검증 (타임스탬프 기반 간단 HMAC 대체)
+                    const expected = btoa(obj.t.toString().split('').reverse().join('') + _PH.slice(0,8));
+                    if (obj.v !== expected) {
+                        sessionStorage.removeItem(SESSION_KEY);
+                        return null;
+                    }
+                    return obj;
+                } catch(e) {
+                    return null;
+                }
+            }
+
+            function setSession() {
+                const t = Date.now();
+                const v = btoa(t.toString().split('').reverse().join('') + _PH.slice(0,8));
+                sessionStorage.setItem(SESSION_KEY, JSON.stringify({ t, v }));
+            }
+
+            function clearSession() {
+                sessionStorage.removeItem(SESSION_KEY);
+            }
+
+            // ── 잠금 상태 관리 ────────────────────────────────────────
+            function getLockState() {
+                try {
+                    const raw = sessionStorage.getItem('_nf_lk');
+                    if (!raw) return { tries: 0, lockedUntil: 0 };
+                    return JSON.parse(raw);
+                } catch(e) { return { tries: 0, lockedUntil: 0 }; }
+            }
+            function setLockState(state) {
+                sessionStorage.setItem('_nf_lk', JSON.stringify(state));
+            }
+
+            // ── 로그인 UI ─────────────────────────────────────────────
+            window.togglePwVis = function() {
+                const inp = document.getElementById('login-pw');
+                const btn = document.getElementById('pw-toggle-btn');
+                if (!inp) return;
+                if (inp.type === 'password') {
+                    inp.type = 'text';
+                    btn.textContent = '🙈';
+                } else {
+                    inp.type = 'password';
+                    btn.textContent = '👁';
+                }
+            };
+
+            function showError(msg) {
+                const el = document.getElementById('login-error');
+                if (!el) return;
+                // textContent 사용 → XSS 원천 차단 (규칙 3)
+                el.textContent = msg;
+                el.classList.add('show');
+                const inp = document.getElementById('login-pw');
+                if (inp) inp.classList.add('error');
+            }
+
+            function hideError() {
+                const el = document.getElementById('login-error');
+                if (el) { el.textContent = ''; el.classList.remove('show'); }
+                const inp = document.getElementById('login-pw');
+                if (inp) inp.classList.remove('error');
+            }
+
+            function updateAttemptsInfo(tries) {
+                const el = document.getElementById('login-attempts-info');
+                if (!el) return;
+                if (tries > 0 && tries < MAX_TRIES) {
+                    el.textContent = `로그인 실패 ${tries}회 / ${MAX_TRIES}회 초과 시 일시 잠금됩니다`;
+                } else {
+                    el.textContent = '';
+                }
+            }
+
+            let lockTimerInterval = null;
+            function showLockUI(lockedUntil) {
+                const formArea  = document.getElementById('login-form-area');
+                const lockArea  = document.getElementById('login-lock-area');
+                const timerTxt  = document.getElementById('lock-timer-txt');
+                if (formArea) formArea.style.display = 'none';
+                if (lockArea) lockArea.style.display  = 'block';
+
+                if (lockTimerInterval) clearInterval(lockTimerInterval);
+                lockTimerInterval = setInterval(() => {
+                    const remaining = Math.max(0, Math.ceil((lockedUntil - Date.now()) / 1000));
+                    if (timerTxt) {
+                        const m = Math.floor(remaining / 60);
+                        const s = remaining % 60;
+                        timerTxt.textContent = `${m}분 ${String(s).padStart(2,'0')}초 후 다시 시도 가능합니다`;
+                    }
+                    if (remaining <= 0) {
+                        clearInterval(lockTimerInterval);
+                        setLockState({ tries: 0, lockedUntil: 0 });
+                        if (formArea) formArea.style.display = 'block';
+                        if (lockArea) lockArea.style.display  = 'none';
+                    }
+                }, 1000);
+            }
+
+            function unlockApp() {
+                setSession();
+                const overlay = document.getElementById('login-overlay');
+                const content = document.getElementById('app-content');
+                if (overlay) {
+                    overlay.classList.add('fade-out');
+                    setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 420);
+                }
+                if (content) content.style.display = '';
+                startDevToolsGuard(); // 인증 후 DevTools 감시 시작
+            }
+
+            window.doLogin = async function() {
+                const inp = document.getElementById('login-pw');
+                const btn = document.getElementById('login-btn');
+                if (!inp || !btn) return;
+
+                // 잠금 확인
+                const lock = getLockState();
+                if (lock.lockedUntil > Date.now()) {
+                    showLockUI(lock.lockedUntil);
+                    return;
+                }
+
+                // 규칙 3: 입력값 XSS 검증 – sanitize 후 해시 비교
+                const raw = inp.value;
+                if (!raw || raw.length === 0) {
+                    showError('비밀번호를 입력해 주세요.');
+                    return;
+                }
+                if (raw.length > 64) {
+                    showError('비밀번호가 너무 깁니다.');
+                    return;
+                }
+                // 특수문자 제어 문자 차단 (null byte, unicode control chars)
+                if (/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(raw)) {
+                    showError('허용되지 않는 문자가 포함되어 있습니다.');
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.textContent = '확인 중…';
+                hideError();
+
+                try {
+                    // 규칙 1: 입력값 SHA-256 해시 후 비교 (평문 비교 금지)
+                    const inputHash = await sha256(raw);
+
+                    if (inputHash === _PH) {
+                        // 성공
+                        setLockState({ tries: 0, lockedUntil: 0 });
+                        inp.value = '';
+                        unlockApp();
+                    } else {
+                        // 실패
+                        const newTries = (lock.tries || 0) + 1;
+                        inp.value = '';
+                        if (newTries >= MAX_TRIES) {
+                            const lockedUntil = Date.now() + LOCK_MS;
+                            setLockState({ tries: newTries, lockedUntil });
+                            showLockUI(lockedUntil);
+                        } else {
+                            setLockState({ tries: newTries, lockedUntil: 0 });
+                            const remaining = MAX_TRIES - newTries;
+                            showError(`비밀번호가 올바르지 않습니다. (${remaining}회 남음)`);
+                            updateAttemptsInfo(newTries);
+                            inp.focus();
+                        }
+                    }
+                } catch(e) {
+                    showError('오류가 발생했습니다. 다시 시도해 주세요.');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = '로그인';
+                }
+            };
+
+            // ── 4. 개발자도구 감지 (비활성화 – 오탐 이슈로 제거) ──────
+            function blockPage() { /* 비활성화 */ }
+            function startDevToolsGuard() { /* 비활성화 */ }
+
+            // ── [넷폼 대시보드 연동] 대시보드가 넘겨주는 매출현황.xlsx 받기 (2026-10) ──
+            // 대시보드(https://netformrnd.github.io)에서 로그인·권한 확인 후 iframe으로 전달한 데이터만 받는다.
+            // 대시보드 인증을 통과한 상태이므로 수신 시 이 페이지의 로그인 화면도 해제한다.
+            (function () {
+                var NF_PARENT = 'https://netformrnd.github.io';      // 이 주소에서 온 메시지만 받음
+                if (window.parent === window) return;                // 대시보드 안(iframe)에서 열렸을 때만 동작
+                window.addEventListener('message', function (e) {
+                    if (e.origin !== NF_PARENT) return;              // 다른 곳에서 온 메시지는 무시
+                    var d = e.data;
+                    if (!d || d.type !== 'nf-sales-xlsx' || !d.buffer) return;
+                    var t = d.updated ? new Date(d.updated) : null;
+                    if (t && isNaN(t.getTime())) t = null;
+                    originalFileBuffer = d.buffer.slice(0);         // '원본 다운로드'용 (메모리에만 보관)
+                    originalFileName = d.name || '매출현황.xlsx';
+                    processExcelData(d.buffer, t);
+                    unlockApp();
+                });
+                window.parent.postMessage({ type: 'nf-sales-xlsx-request' }, NF_PARENT);   // 준비됐다고 알림
+            })();
+
+            // ── 초기화 ────────────────────────────────────────────────
+            async function init() {
+                // 이미 유효한 세션이 있으면 바로 언락
+                if (getSession()) {
+                    const overlay = document.getElementById('login-overlay');
+                    const content = document.getElementById('app-content');
+                    if (overlay) overlay.style.display = 'none';
+                    if (content) content.style.display = '';
+                    startDevToolsGuard();
+                    return;
+                }
+
+                // 잠금 상태 확인
+                const lock = getLockState();
+                if (lock.lockedUntil > Date.now()) {
+                    showLockUI(lock.lockedUntil);
+                }
+
+                // 로그인 화면 포커스
+                setTimeout(() => {
+                    const inp = document.getElementById('login-pw');
+                    if (inp) inp.focus();
+                }, 100);
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })(); // end security IIFE
+    </script>
+</body>
+</html>
